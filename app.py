@@ -1,11 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return jsonify({"message": "Welcome to the Flask application!"})
+    return render_template('index.html')
 
 @app.route('/energy-prices', methods=['GET'])
 def get_energy_prices():

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="../static/styles.css">
+
 </head>
 <body>
     <h1>Weather and Energy Prices Dashboard</h1>
@@ -11,17 +13,20 @@
     <div class="section">
         <h2>Get Energy Prices</h2>
         <button onclick="fetchEnergyPrices()">Fetch Energy Prices</button>
-        <pre id="energy-prices"></pre>
+        <button onclick="toggleDisplay('energy-prices')">Toggle Display</button>
+        <pre id="energy-prices" style="display: none;"></pre>
     </div>
-
+    
     <div class="section">
         <h2>Get Weather Data</h2>
         <input type="text" id="latitude" placeholder="Enter Latitude">
         <input type="text" id="longitude" placeholder="Enter Longitude">
         <button onclick="fetchWeather()">Fetch Weather</button>
-        <pre id="weather-data"></pre>
+        <button onclick="toggleDisplay('weather-data')">Toggle Display</button>
+        <pre id="weather-data" style="display: none;"></pre>
     </div>
+    
 
-    <script src="script.js"></script>
+    <script src="../static/script.js"></script>
 </body>
 </html>
