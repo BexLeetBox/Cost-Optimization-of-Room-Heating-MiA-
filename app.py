@@ -7,25 +7,6 @@ app = Flask(__name__)
 def home():
     return jsonify({"message": "Welcome to the Flask application!"})
 
-@app.route('/items/<int:item_id>', methods=['GET'])
-def get_item(item_id):
-    q = request.args.get('q')
-    return jsonify({"item_id": item_id, "q": q})
-
-@app.route('/items', methods=['POST'])
-def create_item():
-    item = request.get_json()
-    return jsonify({"item_name": item.get('name'), "item_price": item.get('price')})
-
-@app.route('/items/<int:item_id>', methods=['PUT'])
-def update_item(item_id):
-    item = request.get_json()
-    return jsonify({"item_id": item_id, "item": item})
-
-@app.route('/items/<int:item_id>', methods=['DELETE'])
-def delete_item(item_id):
-    return jsonify({"message": f"Item with id {item_id} has been deleted"})
-
 @app.route('/energy-prices', methods=['GET'])
 def get_energy_prices():
     url = "https://www.hvakosterstrommen.no/api/v1/prices/2025/02-05_NO5.json"
@@ -34,6 +15,22 @@ def get_energy_prices():
         return jsonify(response.json())
     else:
         return jsonify({"error": "Failed to retrieve data"}), response.status_code
+
+@app.route('/weather', methods=['GET'])
+def get_weather():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    if not lat or not lon:
+        return jsonify({"error": "Please provide 'lat' and 'lon' query parameters."}), 400
+    
+    url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
+    headers = {"User-Agent": "MyWeatherApp/1.0"}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        return jsonify(response.json())
+    else:
+        return jsonify({"error": "Failed to retrieve weather data."}), response.status_code
 
 if __name__ == '__main__':
     app.run(debug=True)
