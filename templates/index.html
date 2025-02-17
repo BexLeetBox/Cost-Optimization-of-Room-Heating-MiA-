@@ -25,6 +25,16 @@
         <button onclick="toggleDisplay('weather-data')">Toggle Display</button>
         <pre id="weather-data" style="display: none;"></pre>
     </div>
+
+    <div class="section">
+        <h2>Get Merged Data (Energy Prices + Weather)</h2>
+        <input type="text" id="merged-latitude" placeholder="Enter Latitude">
+        <input type="text" id="merged-longitude" placeholder="Enter Longitude">
+        <button onclick="fetchMergedData()">Fetch Merged Data</button>
+        <button onclick="toggleDisplay('merged-data')">Toggle Display</button>
+        <pre id="merged-data" style="display: none;"></pre>
+    </div>
+
     
 
     <script src="../static/script.js"></script>
