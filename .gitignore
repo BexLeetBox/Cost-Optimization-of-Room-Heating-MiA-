@@ -32,3 +32,57 @@ static/*.cache
 # Requirements backups
 pip-log.txt
 debug.log
+
+
+# Ignore all OpenModelica-generated files
+Buildings.*.c
+Buildings.*.o
+Buildings.*.h
+Buildings.*.makefile
+Buildings.*.log
+Buildings.*.json
+Buildings.*_init.xml
+Buildings.*_res.mat
+Buildings.*_res.csv
+Buildings.*_res.plt
+Buildings.*_res.txt
+Buildings.*_res.sizes
+Buildings.*_res.status
+Buildings.*_res.strings
+Buildings.*_res
+Buildings.*_res.*
+Buildings.*.exe
+Buildings.*.dll
+Buildings.*.so
+Buildings.*.libs
+Buildings.*.a
+Buildings.*.cmake
+
+# Ignore all files generated in OpenModelica simulation runs
+*.log
+*.json
+*.makefile
+*.o
+*.h
+*.c
+*.libs
+*.dll
+*.so
+*.a
+*.cmake
+*.csv
+*.xml
+*.mat
+*.plt
+*.txt
+*.sizes
+*.status
+*.strings
+*_res
+*_res.*
+*.bin
+
+# Ignore all hidden OpenModelica temp files
+.omc/
+.omcache/
+.omtemp/
