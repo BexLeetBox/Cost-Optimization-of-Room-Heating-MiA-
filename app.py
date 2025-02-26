@@ -3,6 +3,8 @@ import requests
 import pytz
 import pandas as pd
 from datetime import datetime
+import subprocess
+import os
 
 app = Flask(__name__)
 NORWAY_TZ = pytz.timezone("Europe/Oslo")
@@ -84,6 +86,20 @@ def get_merged_data():
     merged_data = df_merged[["time_start", "NOK_per_kWh", "EUR_per_kWh", "air_temperature"]].to_dict(orient="records")
     
     return jsonify(merged_data)
+
+
+@app.route('/run-simulation', methods=['GET'])
+def run_simulation():
+    """Runs the OpenModelica heat conduction simulation."""
+    script_path = os.path.join(os.getcwd(), "run_simulation.py")
+    result = subprocess.run(["python", script_path], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        return jsonify({"status": "success", "message": "Simulation completed!"})
+    else:
+        return jsonify({"status": "error", "message": result.stderr}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

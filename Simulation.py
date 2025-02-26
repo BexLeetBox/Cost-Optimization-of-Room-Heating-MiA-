@@ -13,17 +13,17 @@ if not load_status:
 # Define the simulation model
 valid_model = "Buildings.Examples.SimpleHouse"
 
-# Set a temporary working directory
-temp_dir = "C:/Users/47973/AppData/Local/Temp/ModelicaSim"
-os.makedirs(temp_dir, exist_ok=True)  # Ensure directory exists
+# Set the simulation output folder inside the project
+simulation_dir = os.path.join(os.getcwd(), "simulation_outputs")
+os.makedirs(simulation_dir, exist_ok=True)  # Ensure folder exists
 
-# Change to the temporary working directory
-os.chdir(temp_dir)
+# Change to the simulation directory
+os.chdir(simulation_dir)
 
-# Run the simulation with the correct syntax
+# Run the simulation
 result = omc.sendExpression(f"simulate({valid_model}, stopTime=86400)")
 
-# Get the error message if simulation fails
+# Get error message if simulation fails
 error_message = omc.sendExpression("getErrorString()")
 if error_message:
     print("\n===== OpenModelica Error Log =====")
@@ -34,7 +34,7 @@ if result is None:
     print("Error: Simulation failed. No result returned from OpenModelica.")
     exit()
 
-print("Simulation complete. Files stored in:", temp_dir)
+print("Simulation complete. Files stored in:", simulation_dir)
 
 # Extract and display key results
 simulation_status = {

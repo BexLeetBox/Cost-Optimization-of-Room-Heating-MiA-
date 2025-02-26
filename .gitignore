@@ -82,7 +82,11 @@ Buildings.*.cmake
 *_res.*
 *.bin
 
+
 # Ignore all hidden OpenModelica temp files
 .omc/
 .omcache/
 .omtemp/
+
+# Ignore the simulation output folder
+simulation_outputs/
