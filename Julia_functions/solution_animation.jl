@@ -21,3 +21,10 @@ function solution_animation(solutions, framerate)
         time[] = t  # Update time observable
     end
 end
+
+function draw(ysol)
+	fig, _ , plt = CairoMakie.plot(Ω, ysol, colormap=:plasma)               # plot of last state (numerical solution)
+	CairoMakie.wireframe!(Ω, color=:black, linewidth=1)                        # add triangulation
+	CairoMakie.Colorbar(fig[1,2], plt)                                         # add color bar
+	display(fig)															  # display the plot
+end
