@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Project related
+tmp/
+outputs/
+.pvd
+.json
+
+
+
 # Virtual Environment
 venv/
 

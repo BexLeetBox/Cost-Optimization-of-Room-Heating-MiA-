@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Layout Builder</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="design.js"></script>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="addWall()">Add Wall</button>
+        <button onclick="addWindow()">Add Window</button>
+        <button onclick="addOven()">Add Heater Oven</button>
+        <button onclick="exportLayout()">Save Layout</button>
+        <button onclick="exportGridapJSON()">EXPORT Layout</button>
+        <button onclick="exportGmsh()">EXPORT to GMSH</button>
+
+    </div>
+    <canvas id="canvas" style=" width: 90%; height: 80%;"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+    
+</body>
+</html>

@@ -1,11 +1,18 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_file
 import requests
 import pytz
 import pandas as pd
 from datetime import datetime
+import subprocess
+import os
 
 app = Flask(__name__)
 NORWAY_TZ = pytz.timezone("Europe/Oslo")
+
+UPLOAD_FOLDER = "uploads"
+OUTPUT_FOLDER = "outputs"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 
 @app.route('/')
@@ -84,6 +91,24 @@ def get_merged_data():
     merged_data = df_merged[["time_start", "NOK_per_kWh", "EUR_per_kWh", "air_temperature"]].to_dict(orient="records")
     
     return jsonify(merged_data)
+
+
+@app.route("/convert-to-msh", methods=["POST"])
+def convert_to_msh():
+    data = request.json
+    geo_file = data.get("geoFile", "layout.geo")
+    
+    geo_path = os.path.join(UPLOAD_FOLDER, geo_file)
+    msh_path = os.path.join(OUTPUT_FOLDER, "layout.msh")
+
+    # Run Gmsh to generate the .msh file
+    subprocess.run(["gmsh", "-2", geo_path, "-o", msh_path], check=True)
+
+    return jsonify({"mshUrl": f"/download-msh"})
+
+@app.route("/download-msh", methods=["GET"])
+def download_msh():
+    return send_file(os.path.join(OUTPUT_FOLDER, "layout.msh"), as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
