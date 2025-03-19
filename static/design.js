@@ -88,9 +88,8 @@ function exportGmsh() {
     let nodes = [];
     let elements = [];
     let nodeCounter = 1;
-    let nodeMap = new Map(); // To store unique nodes and their indices
+    let nodeMap = new Map(); // Store unique nodes and indices
 
-    // Convert Fabric.js objects into Gmsh points and elements
     canvas.forEachObject(obj => {
         if (obj.type === "rect") {
             // Define four corners of the rectangle
@@ -121,7 +120,6 @@ function exportGmsh() {
             });
 
             if (obj.fill === "black") {
-                // Define a quadrilateral surface (wall)
                 elements.push(`Line(${cornerIndices[0]}) = {${cornerIndices[0]}, ${cornerIndices[1]}};`);
                 elements.push(`Line(${cornerIndices[1]}) = {${cornerIndices[1]}, ${cornerIndices[2]}};`);
                 elements.push(`Line(${cornerIndices[2]}) = {${cornerIndices[2]}, ${cornerIndices[3]}};`);
@@ -138,15 +136,32 @@ function exportGmsh() {
         }
     });
 
-    // Generate Gmsh .geo content
-    let gmshGeoContent = `// Gmsh geometry file generated from Fabric.js\n` + nodes.join("\n") + "\n" + elements.join("\n");
+    let gmshGeoContent = `// Auto-generated Gmsh geometry file\n` + nodes.join("\n") + "\n" + elements.join("\n");
 
-    // Create and download .geo file
-    let blob = new Blob([gmshGeoContent], { type: "text/plain" });
-    let link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "layout.geo";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create the .geo file
+    let geoBlob = new Blob([gmshGeoContent], { type: "text/plain" });
+    let geoFileName = "layout.geo";
+    let geoLink = document.createElement("a");
+    geoLink.href = URL.createObjectURL(geoBlob);
+    geoLink.download = geoFileName;
+    document.body.appendChild(geoLink);
+    geoLink.click();
+    document.body.removeChild(geoLink);
+
+    // (Optional) If running in an environment with Gmsh CLI installed, trigger conversion to .msh
+   fetch('http://127.0.0.1:5000/convert-to-msh', {  // Ensure port 5000
+    method: 'POST',
+    body: JSON.stringify({ geoFile: "layout.geo" }),
+    headers: { 'Content-Type': 'application/json' }
+})
+.then(response => response.json())
+.then(data => {
+    let mshLink = document.createElement("a");
+    mshLink.href = "http://127.0.0.1:5000/download-msh";  // Correct port
+    mshLink.download = "layout.msh";
+    document.body.appendChild(mshLink);
+    mshLink.click();
+    document.body.removeChild(mshLink);
+})
+.catch(error => console.error("Error:", error));
 }

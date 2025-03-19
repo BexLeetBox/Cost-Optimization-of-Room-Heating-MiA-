@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>House Layout Builder</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="design.js"></script>
+    <link rel="stylesheet" href="../static/fabric.css">
 </head>
 <body>
     <div class="toolbar">
@@ -17,8 +16,12 @@
         <button onclick="exportGmsh()">EXPORT to GMSH</button>
 
     </div>
-    <canvas id="canvas" style=" width: 90%; height: 80%;"></canvas>
+
+      <div class="canvas-container">
+            <canvas id="canvas" width="100%"></canvas>
+        </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+    <script src="../static/design.js"></script>
     
 </body>
 </html>

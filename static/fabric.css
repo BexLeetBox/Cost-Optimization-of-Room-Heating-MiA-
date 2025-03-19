@@ -1,0 +1,44 @@
+/* Center the entire layout */
+body {
+    display: flex;
+    flex-direction: column;  /* Stack toolbar on top, canvas below */
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+/* Toolbar stays at the top */
+.toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;  /* Space between toolbar and canvas */
+}
+
+/* Make sure the buttons don't stretch too much */
+button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    width: auto; /* Prevents buttons from being too wide */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Canvas is centered */
+.canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid black;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: white;
+}

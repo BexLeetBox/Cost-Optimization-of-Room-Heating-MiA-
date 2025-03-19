@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_file
+from flask_cors import CORS
 import requests
 import pytz
 import pandas as pd
@@ -7,6 +8,8 @@ import subprocess
 import os
 
 app = Flask(__name__)
+CORS(app)
+
 NORWAY_TZ = pytz.timezone("Europe/Oslo")
 
 UPLOAD_FOLDER = "uploads"
