@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, send_file
+from flask import Flask, jsonify, request, render_template
 import requests
 import pytz
 import pandas as pd
@@ -97,7 +97,7 @@ def get_merged_data():
 def convert_to_msh():
     data = request.json
     geo_file = data.get("geoFile", "layout.geo")
-    
+
     geo_path = os.path.join(UPLOAD_FOLDER, geo_file)
     msh_path = os.path.join(OUTPUT_FOLDER, "layout.msh")
 
@@ -109,6 +109,20 @@ def convert_to_msh():
 @app.route("/download-msh", methods=["GET"])
 def download_msh():
     return send_file(os.path.join(OUTPUT_FOLDER, "layout.msh"), as_attachment=True)
+
+
+@app.route('/run-simulation', methods=['GET'])
+def run_simulation():
+    """Runs the OpenModelica heat conduction simulation."""
+    script_path = os.path.join(os.getcwd(), "run_simulation.py")
+    result = subprocess.run(["python", script_path], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        return jsonify({"status": "success", "message": "Simulation completed!"})
+    else:
+        return jsonify({"status": "error", "message": result.stderr}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

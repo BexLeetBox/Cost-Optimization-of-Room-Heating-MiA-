@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="../static/styles.css">
+    
 
 </head>
+
 <body>
     <h1>Weather and Energy Prices Dashboard</h1>
 
@@ -16,7 +19,7 @@
         <button onclick="toggleDisplay('energy-prices')">Toggle Display</button>
         <pre id="energy-prices" style="display: none;"></pre>
     </div>
-    
+
     <div class="section">
         <h2>Get Weather Data</h2>
         <input type="text" id="latitude" placeholder="Enter Latitude">
@@ -35,8 +38,21 @@
         <pre id="merged-data" style="display: none;"></pre>
     </div>
 
+    <div class="section">
+        <h2>Heat Conduction Simulation</h2>
+        <button onclick="runSimulation()">Run Simulation</button>
+        <div id="loading-spinner" style="display: none;">
+            <img src="../static/images/Spinner@1x-0.8s-200px-200px.gif" width="50">
+
+        </div>
+        <p id="status"></p>
+        
+    </div>
+
+    
     
 
     <script src="../static/script.js"></script>
 </body>
+
 </html>

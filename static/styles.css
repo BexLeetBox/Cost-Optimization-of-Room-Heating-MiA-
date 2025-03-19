@@ -15,15 +15,22 @@ h1 {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column; /* Forces child elements to stack */
+    gap: 10px; /* Adds space between each element */
+    align-items: center;
+    justify-content: center;
 }
 
 button {
     padding: 10px 20px;
+    margin: 5px;
     border: none;
     background-color: #007BFF;
     color: white;
     border-radius: 5px;
     cursor: pointer;
+    width: 10%;
 }
 
 button:hover {
@@ -37,11 +44,60 @@ pre {
     overflow: auto;
 }
 
-.toolbar {
-    margin-bottom: 10px;
+input{
+    width: 30vw;
 }
 
-canvas {
-    border: 1px solid black;
-    width: 100% !important;
+
+
+
+
+/* Apply a clean design to input fields */
+input {
+    width: 100%; /* Make inputs full width */
+    max-width: 300px; /* Limit width */
+    padding: 10px; /* Comfortable padding */
+    margin-top: 8px; /* Space between inputs */
+    border: 2px solid #ddd; /* Subtle border */
+    border-radius: 6px; /* Rounded corners */
+    font-size: 16px; /* Readable font */
+    transition: all 0.3s ease-in-out; /* Smooth transitions */
+}
+
+/* Add a glow effect on focus */
+input:focus {
+    border-color: #007BFF; /* Highlight border in blue */
+    outline: none;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.3); /* Soft glow */
+}
+
+/* Improve button appearance */
+button {
+    display: block; /* Ensure buttons are on new lines */
+    width: 300px; /* Fit to text size */
+    padding: 10px 20px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #007BFF; /* Blue background */
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+/* Hover effect */
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Center everything inside a section */
+.section {
+    text-align: center; /* Center text */
+    background: white; /* White background */
+    padding: 20px;
+    margin: 20px auto; /* Center horizontally */
+    max-width: 50vw; /* Limit width */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
 }
