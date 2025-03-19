@@ -1,14 +1,18 @@
 
-function SEsolver(Q,Trialspace,Testspace;w=nothing,dΩ,dΓ=nothing,cache=nothing,A=nothing,y_dof=fill(0.0, num_free_dofs(Testspace)), solver)
-	a_SE_tconst(t, dtT, ϕ) = ∫(ρ*c*dtT*ϕ)dΩ
-	a_SE_tnonconst(t, T, ϕ) = ∫(-k * ∇(T) ⋅ ∇(ϕ) - tr(h*T*ϕ))dΩ
-	l_SE(t, ϕ) = ∫((x->Q(x,t))*ϕ - tr(h*(x->Tout(x,t))*ϕ))dΩ	
-	op_SE = TransientLinearFEOperator((a_SE_tconst, a_SE_tnonconst), l_SE, Trialspace, Testspace, constant_forms=(true, false))
+function SEsolver(Qt,Trialspace,Testspace;w=nothing,dΩ,dΓ=nothing,cache=nothing,A=nothing,y_dof=fill(0.0, num_free_dofs(Testspace)))
+	a_SE_tconst(t, dtT, ϕ) = ∫(c*dtT*ϕ*ρ)dΩ
+	a_SE_tnonconst(t, T, ϕ) = ∫(k * ∇(T) ⋅ ∇(ϕ))dΩ + ∫(h*T*ϕ)dΓ
+	l_SE(t, ϕ) = ∫(Qt(t) * ϕ)dΩ + ∫(Tout(t) * ϕ * h)dΓ	
+	op_SE = TransientLinearFEOperator((a_SE_tnonconst, a_SE_tconst), l_SE, Trialspace, Testspace, constant_forms=(true, true))
 	# tableau = :SDIRK_2_2
 	# solver_rk = RungeKutta(ls, ls, Δt, tableau)
 
-	y_dof = solve(solver, op_SE, t0, tF, TIni)
-	return y_dof, 0.0,0.0
+	T = solve(solver, op_SE, t0, tF, TIni)
+
+	return [(t0, TIni), collect((t, FEFunction(Trialspace, copy(get_free_dof_values(TT)))) for (t, TT) in T)...], 0.0, 0.0
+
+	# return [(t0,TIni),collect((t,TT) for (t,TT) in T)...], 0.0,0.0
+
 end
 
 
@@ -16,14 +20,21 @@ end
 
 
 
-function AEsolver(T,Q,Trialspace,Testspace;dΩ,dΓ=nothing,cache=nothing,A=nothing,p_dof=fill(0.0, num_free_dofs(Testspace)), solver)
-	a_AE_tconst(t, dtW, ψ) = ∫(ρ*c*dtW*ψ)dΩ
-	a_AE_tnonconst(t, W, ψ) = ∫(+k * ∇(W) ⋅ ∇(ψ) + tr(h*W*ψ))dΩ
-	l_AE(t, ψ) = γ*∫(((x->T(x,t))-Tfin)*ψ - tr(h*(x->Tout(x,t))*ψ))dΩ	
-	op_AE = TransientLinearFEOperator((a_AE_tconst, a_AE_tnonconst), l_AE, Trialspace, Testspace, constant_forms=(true, false))
+function AEsolver(T,Q,Trialspace,Testspace;dΩ,dΓ=nothing,cache=nothing,A=nothing,W_dof=fill(0.0, num_free_dofs(Testspace)))
+	a_AE_tconst(t, dtW, ψ) = ∫(c*dtW*ψ*ρ)dΩ
+	a_AE_tnonconst(t, W, ψ) = ∫(k * (∇(W) ⋅ ∇(ψ)))dΩ - ∫(h*W*ψ)dΓ
+	l_AE(t, ψ) = ∫(0.0*ψ)dΩ
+	#l_AE(t, ψ) = γ*∫(((x->T(x,t))-Tfin)*ψ - tr(h*(x->Tout(x,t))*ψ))dΩ	
+	op_AE = TransientLinearFEOperator((a_AE_tnonconst, a_AE_tconst), l_AE, Trialspace, Testspace, constant_forms=(true, true))
 	# tableau = :SDIRK_2_2
 	# solver_rk = RungeKutta(ls, ls, Δt, tableau)
+	W_end=interpolate_everywhere(-γ*(T(tF)-Tfin)/c/ρ, Uspace(tF))
+	W = solve(ThetaMethod(LUSolver(), Δt, θ), op_AE, t0, tF, W_end)
 
-	y_dof = solve(solver, op_AE, t0, tF, TIni)
-	return y_dof, 0.0,0.0
+	W_copy = [collect((t, FEFunction(Trialspace, copy(get_free_dof_values(WW)))) for (t, WW) in W)...]
+	W_copy_reversed = reverse(W_copy)
+	push!(W_copy_reversed,(tF,W_end))
+	return W_copy_reversed, 0.0, 0.0
+
+	# return [collect((tF-t,w) for (t,w) in reverse(collect((t,WW) for (t,WW) in W)))... ; (tF,W_end)], 0.0,0.0
 end

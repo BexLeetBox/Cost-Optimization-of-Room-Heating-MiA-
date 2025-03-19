@@ -28,3 +28,43 @@ function draw(ysol)
 	CairoMakie.Colorbar(fig[1,2], plt)                                         # add color bar
 	display(fig)															  # display the plot
 end
+
+function savePVDall(ys, qs, ps)
+    for k = 1:length(ys)
+        if !isdir("tmpse$k")
+            mkdir("tmpse$k")
+        end
+        createpvd("results_se$k") do pvd
+            for (tn, uhn) in ys[k]
+                pvd[tn] = createvtk(Ω, "tmpse$k/results_se{$k}_$tn" * ".vtu", cellfields=["u" => uhn])
+            end
+        end
+    end
+    for k = 1:length(ps)
+        if !isdir("tmpadj$k")
+            mkdir("tmpadj$k")
+        end
+        createpvd("results_adj$k") do pvd
+            for (tn, uhn) in ps[k]
+                pvd[tn] = createvtk(Ω, "tmpadj$k/results_adj{$k}_$tn" * ".vtu", cellfields=["u" => uhn])
+            end
+        end
+    end
+    for k = 1:length(qs)
+        if !isdir("tmpcont$k")
+            mkdir("tmpcont$k")
+        end
+        createpvd("results_cont$k") do pvd
+            for (tn, uhn) in qs[k]
+                pvd[tn] = createvtk(Ω, "tmpcont$k/results_cont{$k}_$tn" * ".vtu", cellfields=["u" => uhn])
+            end
+        end
+    end
+end
+
+ysave = ys
+qsave = qs
+psave = ps
+costsave = costs
+
+savePVDall(ys, qs, ps)
