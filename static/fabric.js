@@ -41,12 +41,14 @@ function finishPolygon() {
 
   // Convert array [ {x: number, y: number}, ... ] to polygon
   // Make a 'wall' style polygon (black fill, or black stroke)
-  let polygon = new fabric.Polygon(polygonPoints, {
-    fill: 'black',
+let polygon = new fabric.Polygon(polygonPoints, {
+    fill: 'transparent',
+    stroke: 'black',
+    strokeWidth: 2,
     selectable: true,
-    objectCaching: false  // optional
+    objectCaching: false
   });
-
+    polygon.set('name', 'Wall');
   canvas.add(polygon);
 
   // Clear temp data
@@ -174,75 +176,156 @@ function exportGridapJSON() {
 }
 
 function exportGmsh() {
-    let nodes = [];
-    let nodeMap = new Map(); // Store unique points
-    let lines = [];
-    let lineLoops = [];
-    let nodeCounter = 1;
-    let lineCounter = 1;
+  // Data structures for storing unique geometry
+  let nodes = [];
+  let nodeMap = new Map(); // Maps "x,y" -> pointID
+  let lines = [];
+  let lineLoops = [];
+  let nodeCounter = 1;  // Unique ID for "Point()"
+  let lineCounter = 1;  // Unique ID for "Line()"
 
-    canvas.forEachObject(obj => {
-        if (obj.type === "rect") {
-            const left = Math.round(obj.left / gridSize);
-            const top = Math.round(obj.top / gridSize);
-            const right = left + Math.round(obj.width / gridSize);
-            const bottom = top + Math.round(obj.height / gridSize);
+  // Iterate over all objects in the Fabric.js canvas
+  canvas.forEachObject(obj => {
 
-            let corners = [
-                [left, top], [right, top],
-                [right, bottom], [left, bottom]
-            ];
+    // ======================
+    // 1) RECTANGLE EXPORT
+    // ======================
+    if (obj.type === "rect") {
+      const left = Math.round(obj.left / gridSize);
+      const top = Math.round(obj.top / gridSize);
+      const right = left + Math.round(obj.width / gridSize);
+      const bottom = top + Math.round(obj.height / gridSize);
 
-            let cornerIndices = [];
+      // Four corners
+      let corners = [
+        [left, top],
+        [right, top],
+        [right, bottom],
+        [left, bottom]
+      ];
 
-            // Assign unique IDs to points
-            corners.forEach(corner => {
-                let key = `${corner[0]},${corner[1]}`;
-                if (!nodeMap.has(key)) {
-                    nodeMap.set(key, nodeCounter);
-                    nodes.push(`Point(${nodeCounter}) = {${corner[0]}, ${corner[1]}, 0, 1.0};`);
-                    cornerIndices.push(nodeCounter);
-                    nodeCounter++;
-                } else {
-                    cornerIndices.push(nodeMap.get(key));
-                }
-            });
-
-            // Ensure valid lines and unique IDs
-            lines.push(`Line(${lineCounter}) = {${cornerIndices[0]}, ${cornerIndices[1]}};`);
-            lines.push(`Line(${lineCounter + 1}) = {${cornerIndices[1]}, ${cornerIndices[2]}};`);
-            lines.push(`Line(${lineCounter + 2}) = {${cornerIndices[2]}, ${cornerIndices[3]}};`);
-            lines.push(`Line(${lineCounter + 3}) = {${cornerIndices[3]}, ${cornerIndices[0]}};`);
-
-            let loopIndex = lineCounter + 4;
-            lineLoops.push(`Line Loop(${loopIndex}) = {${lineCounter}, ${lineCounter + 1}, ${lineCounter + 2}, ${lineCounter + 3}};`);
-            let surfaceIndex = loopIndex + 1;
-            lineLoops.push(`Plane Surface(${surfaceIndex}) = {${loopIndex}};`);
-
-            lineCounter += 5;
+      // Convert each corner to a unique point ID
+      let cornerIndices = [];
+      corners.forEach(([x, y]) => {
+        let key = `${x},${y}`;
+        if (!nodeMap.has(key)) {
+          nodeMap.set(key, nodeCounter);
+          nodes.push(`Point(${nodeCounter}) = {${x}, ${y}, 0, 1.0};`);
+          cornerIndices.push(nodeCounter);
+          nodeCounter++;
+        } else {
+          cornerIndices.push(nodeMap.get(key));
         }
-    });
+      });
 
-    let gmshGeoContent = `// Auto-generated Gmsh geometry file\n` + nodes.join("\n") + "\n" + lines.join("\n") + "\n" + lineLoops.join("\n");
+      // Create 4 lines for the rectangle edges
+      lines.push(`Line(${lineCounter}) = {${cornerIndices[0]}, ${cornerIndices[1]}};`);
+      lines.push(`Line(${lineCounter + 1}) = {${cornerIndices[1]}, ${cornerIndices[2]}};`);
+      lines.push(`Line(${lineCounter + 2}) = {${cornerIndices[2]}, ${cornerIndices[3]}};`);
+      lines.push(`Line(${lineCounter + 3}) = {${cornerIndices[3]}, ${cornerIndices[0]}};`);
 
-    // Send the .geo content to Flask
-    fetch("http://127.0.0.1:5000/convert-to-msh", {
-        method: "POST",
-        body: JSON.stringify({ geoContent: gmshGeoContent, geoFile: "layout.geo" }),
-        headers: { "Content-Type": "application/json" }
-    })
+      // Make a line loop + plane surface
+      let loopIndex = lineCounter + 4;
+      lineLoops.push(`Line Loop(${loopIndex}) = {${lineCounter}, ${lineCounter + 1}, ${lineCounter + 2}, ${lineCounter + 3}};`);
+      let surfaceIndex = loopIndex + 1;
+      lineLoops.push(`Plane Surface(${surfaceIndex}) = {${loopIndex}};`);
+
+      // Increment lineCounter to avoid ID collisions
+      lineCounter += 5;
+    }
+
+    // =====================
+    // 2) POLYGON EXPORT
+    // =====================
+    else if (obj.type === "polygon") {
+      // We'll assume no rotation or scaling
+      // If your polygons are transformed, use obj.calcTransformMatrix() or other transformations.
+
+      // Fabric polygon points are local coords, top-left is (obj.left, obj.top)
+      // We'll shift them to canvas coords and then snap to the grid.
+      let offsetX = Math.round(obj.left);
+      let offsetY = Math.round(obj.top);
+
+      let poly = obj; // a fabric.Polygon
+      let absPoints = [];
+
+      // Convert from local polygon coords to absolute canvas coords
+      for (const pt of poly.points) {
+        let x = Math.round((pt.x + offsetX) / gridSize) * gridSize;
+        let y = Math.round((pt.y + offsetY) / gridSize) * gridSize;
+        absPoints.push({ x, y });
+      }
+
+      // Assign unique IDs to the polygon corners
+      let cornerIndices = [];
+      for (let { x, y } of absPoints) {
+        let key = `${x},${y}`;
+        if (!nodeMap.has(key)) {
+          nodeMap.set(key, nodeCounter);
+          nodes.push(`Point(${nodeCounter}) = {${x}, ${y}, 0, 1.0};`);
+          cornerIndices.push(nodeCounter);
+          nodeCounter++;
+        } else {
+          cornerIndices.push(nodeMap.get(key));
+        }
+      }
+
+      // Create Lines between consecutive points + close the loop
+      let localLineIds = [];
+      for (let i = 0; i < cornerIndices.length; i++) {
+        let start = cornerIndices[i];
+        let end = cornerIndices[(i + 1) % cornerIndices.length]; // wrap to first
+        // Ensure we don't create degenerate lines (start != end)
+        if (start === end) continue;
+
+        lines.push(`Line(${lineCounter}) = {${start}, ${end}};`);
+        localLineIds.push(lineCounter);
+        lineCounter++;
+      }
+
+      // If we have at least 3 edges, create a line loop + plane surface
+      if (localLineIds.length >= 3) {
+        let loopIndex = lineCounter;
+        lineLoops.push(`Line Loop(${loopIndex}) = {${localLineIds.join(", ")}};`);
+        let surfaceIndex = loopIndex + 1;
+        lineLoops.push(`Plane Surface(${surfaceIndex}) = {${loopIndex}};`);
+        lineCounter += 2;
+      }
+    }
+
+    // You could else-if other shapes (circles, etc.)
+  });
+
+  // ===========================
+  // 3) Construct .geo File
+  // ===========================
+  let gmshGeoContent =
+    `// Auto-generated Gmsh geometry file\n`
+    + nodes.join("\n") + "\n"
+    + lines.join("\n") + "\n"
+    + lineLoops.join("\n");
+
+  // ===========================
+  // 4) Send to Flask
+  // ===========================
+  fetch("http://127.0.0.1:5000/convert-to-msh", {
+    method: "POST",
+    body: JSON.stringify({ geoContent: gmshGeoContent, geoFile: "layout.geo" }),
+    headers: { "Content-Type": "application/json" }
+  })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            console.error("❌ Error:", data.error);
-        } else {
-            let mshLink = document.createElement("a");
-            mshLink.href = "http://127.0.0.1:5000/download-msh";
-            mshLink.download = "layout.msh";
-            document.body.appendChild(mshLink);
-            mshLink.click();
-            document.body.removeChild(mshLink);
-        }
+      if (data.error) {
+        console.error("❌ Error:", data.error);
+      } else {
+        // Download the .msh file automatically
+        let mshLink = document.createElement("a");
+        mshLink.href = "http://127.0.0.1:5000/download-msh";
+        mshLink.download = "layout.msh";
+        document.body.appendChild(mshLink);
+        mshLink.click();
+        document.body.removeChild(mshLink);
+      }
     })
     .catch(error => console.error("❌ Fetch Error:", error));
 }

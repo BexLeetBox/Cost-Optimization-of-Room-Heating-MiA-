@@ -113,7 +113,7 @@ def convert_to_msh():
         with open(geo_path, "w") as geo_file:
             geo_file.write(geo_content)
 
-        print(f"✅ Saved {geo_filename} in {UPLOAD_FOLDER}/")
+        print(f" Saved {geo_filename} in {UPLOAD_FOLDER}/")
 
         # Run Gmsh with absolute paths
         gmsh_path = r"C:\Users\Bex\AppData\Local\Microsoft\WinGet\Links\gmsh.exe"  # Ensure this is correct
@@ -124,16 +124,16 @@ def convert_to_msh():
             text=True
         )
 
-        print(f"✅ Gmsh Output: {result.stdout}")
-        print(f"✅ Gmsh Errors: {result.stderr}")
+        print(f" Gmsh Output: {result.stdout}")
+        print(f" Gmsh Errors: {result.stderr}")
 
         return jsonify({"mshUrl": "/download-msh"})
 
     except subprocess.CalledProcessError as e:
-        print(f"❌ Gmsh failed with error:\n{e.stderr}")
+        print(f" Gmsh failed with error:\n{e.stderr}")
         return jsonify({"error": f"Gmsh failed: {e.stderr}"}), 500
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f" Unexpected error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/download-msh", methods=["GET"])
