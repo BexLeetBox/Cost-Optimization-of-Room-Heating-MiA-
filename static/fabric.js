@@ -3,14 +3,57 @@ let polygonPoints = [];
 let tempCircles = [];  // to visualize clicked points
 let firstPoint = null;
 
+
+
+const gridSize = 50;         // Size of the grid cells
+let hoverCircle = null;      // Circle for the hover highlight
+let snapToGrid = true;
+
+
+
+    function toggleSnap() {
+      snapToGrid = !snapToGrid;
+      console.log("Snap to grid =", snapToGrid);
+    }
+
 const canvas = new fabric.Canvas('canvas', {
     width: 800,
     height: 600,
     backgroundColor: '#f0f0f0'
 });
 
-// Define grid size for discretization
-const gridSize = 50;
+canvas.on('mouse:move', function(event) {
+      let pointer = canvas.getPointer(event.e);
+      let x = pointer.x;
+      let y = pointer.y;
+
+      // If snapping is enabled, round to nearest grid intersection
+      if (snapToGrid) {
+        x = Math.round(x / gridSize) * gridSize;
+        y = Math.round(y / gridSize) * gridSize;
+      }
+
+      // If we haven't created the hover circle yet, create it now
+      if (!hoverCircle) {
+        hoverCircle = new fabric.Circle({
+          left: x - 5,
+          top: y - 5,
+          radius: 5,
+          fill: 'rgba(255, 0, 0, 0.5)',
+          selectable: false,
+          evented: false
+        });
+        canvas.add(hoverCircle);
+      } else {
+        // Move the existing circle
+        hoverCircle.set({ left: x - 5, top: y - 5 });
+      }
+
+      hoverCircle.setCoords();
+      canvas.renderAll();
+    });
+
+
 
 // Snap objects to grid when moved
 canvas.on('object:moving', function(e) {
@@ -59,6 +102,8 @@ let polygon = new fabric.Polygon(polygonPoints, {
 
   canvas.renderAll();
 }
+
+
 
 canvas.on('mouse:down', function (opt) {
   if (!polygonMode) return;  // Only do this if we're drawing a polygon
