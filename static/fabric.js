@@ -1,3 +1,8 @@
+let polygonMode = false;
+let polygonPoints = [];
+let tempCircles = [];  // to visualize clicked points
+let firstPoint = null;
+
 const canvas = new fabric.Canvas('canvas', {
     width: 800,
     height: 600,
@@ -15,6 +20,91 @@ canvas.on('object:moving', function(e) {
         top: Math.round(obj.top / gridSize) * gridSize
     });
 });
+
+
+
+function startPolygonMode() {
+  polygonMode = true;
+  polygonPoints = [];
+  tempCircles.forEach(c => canvas.remove(c));
+  tempCircles = [];
+  firstPoint = null;
+}
+
+function finishPolygon() {
+  if (polygonPoints.length < 3) {
+    alert("Need at least 3 points to form a polygon!");
+    return;
+  }
+
+  polygonMode = false;
+
+  // Convert array [ {x: number, y: number}, ... ] to polygon
+  // Make a 'wall' style polygon (black fill, or black stroke)
+  let polygon = new fabric.Polygon(polygonPoints, {
+    fill: 'black',
+    selectable: true,
+    objectCaching: false  // optional
+  });
+
+  canvas.add(polygon);
+
+  // Clear temp data
+  polygonPoints = [];
+  tempCircles.forEach(c => canvas.remove(c));
+  tempCircles = [];
+  firstPoint = null;
+
+  canvas.renderAll();
+}
+
+canvas.on('mouse:down', function (opt) {
+  if (!polygonMode) return;  // Only do this if we're drawing a polygon
+
+  let pointer = canvas.getPointer(opt.e);
+  // Snap to grid if desired
+  let x = Math.round(pointer.x / gridSize) * gridSize;
+  let y = Math.round(pointer.y / gridSize) * gridSize;
+
+  // If no first point yet, define it
+  if (!firstPoint) {
+    firstPoint = { x, y };
+    polygonPoints.push(firstPoint);
+    drawTempCircle(x, y);
+    return;
+  }
+
+  // Check if we are close to the first point -> close polygon
+  let dist = distance(x, y, firstPoint.x, firstPoint.y);
+  let threshold = 10; // px threshold to snap/close
+  if (dist < threshold && polygonPoints.length > 2) {
+    // automatically finish polygon
+    finishPolygon();
+  } else {
+    // Otherwise add new point
+    let newPoint = { x, y };
+    polygonPoints.push(newPoint);
+    drawTempCircle(x, y);
+  }
+});
+
+
+function drawTempCircle(x, y) {
+  let circle = new fabric.Circle({
+    left: x - 3,
+    top: y - 3,
+    radius: 3,
+    fill: 'red',
+    selectable: false,
+    evented: false
+  });
+  tempCircles.push(circle);
+  canvas.add(circle);
+}
+
+function distance(x1, y1, x2, y2) {
+  return Math.sqrt((x1 - x2)**2 + (y1 - y2)**2);
+}
 
 // Function to add walls (black rectangles)
 function addWall() {
@@ -85,9 +175,11 @@ function exportGridapJSON() {
 
 function exportGmsh() {
     let nodes = [];
-    let elements = [];
+    let nodeMap = new Map(); // Store unique points
+    let lines = [];
+    let lineLoops = [];
     let nodeCounter = 1;
-    let nodeMap = new Map();
+    let lineCounter = 1;
 
     canvas.forEachObject(obj => {
         if (obj.type === "rect") {
@@ -103,6 +195,7 @@ function exportGmsh() {
 
             let cornerIndices = [];
 
+            // Assign unique IDs to points
             corners.forEach(corner => {
                 let key = `${corner[0]},${corner[1]}`;
                 if (!nodeMap.has(key)) {
@@ -115,24 +208,22 @@ function exportGmsh() {
                 }
             });
 
-            if (obj.fill === "black") {
-                elements.push(`Line(${cornerIndices[0]}) = {${cornerIndices[0]}, ${cornerIndices[1]}};`);
-                elements.push(`Line(${cornerIndices[1]}) = {${cornerIndices[1]}, ${cornerIndices[2]}};`);
-                elements.push(`Line(${cornerIndices[2]}) = {${cornerIndices[2]}, ${cornerIndices[3]}};`);
-                elements.push(`Line(${cornerIndices[3]}) = {${cornerIndices[3]}, ${cornerIndices[0]}};`);
+            // Ensure valid lines and unique IDs
+            lines.push(`Line(${lineCounter}) = {${cornerIndices[0]}, ${cornerIndices[1]}};`);
+            lines.push(`Line(${lineCounter + 1}) = {${cornerIndices[1]}, ${cornerIndices[2]}};`);
+            lines.push(`Line(${lineCounter + 2}) = {${cornerIndices[2]}, ${cornerIndices[3]}};`);
+            lines.push(`Line(${lineCounter + 3}) = {${cornerIndices[3]}, ${cornerIndices[0]}};`);
 
-                let lineLoopIndex = nodeCounter;
-                elements.push(`Line Loop(${lineLoopIndex}) = {${cornerIndices[0]}, ${cornerIndices[1]}, ${cornerIndices[2]}, ${cornerIndices[3]}};`);
-                nodeCounter++;
+            let loopIndex = lineCounter + 4;
+            lineLoops.push(`Line Loop(${loopIndex}) = {${lineCounter}, ${lineCounter + 1}, ${lineCounter + 2}, ${lineCounter + 3}};`);
+            let surfaceIndex = loopIndex + 1;
+            lineLoops.push(`Plane Surface(${surfaceIndex}) = {${loopIndex}};`);
 
-                let surfaceIndex = nodeCounter;
-                elements.push(`Plane Surface(${surfaceIndex}) = {${lineLoopIndex}};`);
-                nodeCounter++;
-            }
+            lineCounter += 5;
         }
     });
 
-    let gmshGeoContent = `// Auto-generated Gmsh geometry file\n` + nodes.join("\n") + "\n" + elements.join("\n");
+    let gmshGeoContent = `// Auto-generated Gmsh geometry file\n` + nodes.join("\n") + "\n" + lines.join("\n") + "\n" + lineLoops.join("\n");
 
     // Send the .geo content to Flask
     fetch("http://127.0.0.1:5000/convert-to-msh", {
@@ -143,7 +234,7 @@ function exportGmsh() {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            console.error("Error:", data.error);
+            console.error("❌ Error:", data.error);
         } else {
             let mshLink = document.createElement("a");
             mshLink.href = "http://127.0.0.1:5000/download-msh";
@@ -153,5 +244,5 @@ function exportGmsh() {
             document.body.removeChild(mshLink);
         }
     })
-    .catch(error => console.error("Fetch Error:", error));
+    .catch(error => console.error("❌ Fetch Error:", error));
 }
