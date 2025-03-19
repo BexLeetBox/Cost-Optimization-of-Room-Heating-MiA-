@@ -56,6 +56,8 @@
         let heatingElements = [];
         let heatingPreview = null;
         let drawingHeating = false;
+        // Minimal pixel distance to create a section
+        const minSectionSize = 5;
 
         function setMode(newMode) {
             mode = newMode;
@@ -109,10 +111,15 @@
                             if (b.name === 'Top' || b.name === 'Bottom') {
                                 let startX = Math.min(sectionStart.pos.x, sectionEnd.x);
                                 let width = Math.abs(sectionEnd.x - sectionStart.pos.x);
+                                // Only create a section if the drawn segment is big enough.
+                                if (width < minSectionSize) {
+                                    sectionStart = null;
+                                    return;
+                                }
                                 let section = new Konva.Rect({
                                     x: b.x + startX,
                                     y: b.y,
-                                    width: width || b.width,
+                                    width: width,
                                     height: b.height,
                                     fill: mode === 'Window' ? 'lightblue' : 'brown',
                                 });
@@ -124,16 +131,19 @@
                                 section.sectionData = sectionData;
                                 sectionStart = null;
                                 layer.draw();
-                            }
-                            else if (b.name === "Left" || b.name === "Right") {
+                            } else if (b.name === "Left" || b.name === "Right") {
                                 let startY = Math.min(sectionStart.pos.y, sectionEnd.y);
                                 let height = Math.abs(sectionEnd.y - sectionStart.pos.y);
-
+                                // Only create a section if the drawn segment is big enough.
+                                if (height < minSectionSize) {
+                                    sectionStart = null;
+                                    return;
+                                }
                                 let section = new Konva.Rect({
                                     y: b.y + startY,
                                     x: b.x,
                                     width: b.width,
-                                    height: height || b.height,
+                                    height: height,
                                     fill: mode === 'Window' ? 'lightblue' : 'brown',
                                 });
                                 section.isSection = true;
