@@ -99,20 +99,50 @@ def get_merged_data():
 @app.route("/convert-to-msh", methods=["POST"])
 def convert_to_msh():
     data = request.json
-    geo_file = data.get("geoFile", "layout.geo")
+    geo_content = data.get("geoContent", "")  # Expecting file content
+    geo_filename = data.get("geoFile", "layout.geo")
 
-    geo_path = os.path.join(UPLOAD_FOLDER, geo_file)
+    geo_path = os.path.join(UPLOAD_FOLDER, geo_filename)
     msh_path = os.path.join(OUTPUT_FOLDER, "layout.msh")
 
-    # Run Gmsh to generate the .msh file
-    subprocess.run(["gmsh", "-2", geo_path, "-o", msh_path], check=True)
+    try:
+        if not geo_content:
+            return jsonify({"error": "No .geo content received"}), 400
 
-    return jsonify({"mshUrl": f"/download-msh"})
+        # Save .geo file
+        with open(geo_path, "w") as geo_file:
+            geo_file.write(geo_content)
+
+        print(f"✅ Saved {geo_filename} in {UPLOAD_FOLDER}/")
+
+        # Run Gmsh with absolute paths
+        gmsh_path = r"C:\Users\Bex\AppData\Local\Microsoft\WinGet\Links\gmsh.exe"  # Ensure this is correct
+        result = subprocess.run(
+            [gmsh_path, "-2", geo_path, "-o", msh_path],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        print(f"✅ Gmsh Output: {result.stdout}")
+        print(f"✅ Gmsh Errors: {result.stderr}")
+
+        return jsonify({"mshUrl": "/download-msh"})
+
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Gmsh failed with error:\n{e.stderr}")
+        return jsonify({"error": f"Gmsh failed: {e.stderr}"}), 500
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/download-msh", methods=["GET"])
 def download_msh():
-    return send_file(os.path.join(OUTPUT_FOLDER, "layout.msh"), as_attachment=True)
+    msh_file_path = os.path.join(OUTPUT_FOLDER, "layout.msh")
+    if not os.path.exists(msh_file_path):
+        return jsonify({"error": "No .msh file found"}), 404
 
+    return send_file(msh_file_path, as_attachment=True)
 
 @app.route('/run-simulation', methods=['GET'])
 def run_simulation():

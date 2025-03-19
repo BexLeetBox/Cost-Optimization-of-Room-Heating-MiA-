@@ -83,26 +83,22 @@ function exportGridapJSON() {
     return JSON.stringify({ nodes, elements }, null, 2);
 }
 
-
 function exportGmsh() {
     let nodes = [];
     let elements = [];
     let nodeCounter = 1;
-    let nodeMap = new Map(); // Store unique nodes and indices
+    let nodeMap = new Map();
 
     canvas.forEachObject(obj => {
         if (obj.type === "rect") {
-            // Define four corners of the rectangle
             const left = Math.round(obj.left / gridSize);
             const top = Math.round(obj.top / gridSize);
             const right = left + Math.round(obj.width / gridSize);
             const bottom = top + Math.round(obj.height / gridSize);
 
             let corners = [
-                [left, top],     // Top-left
-                [right, top],    // Top-right
-                [right, bottom], // Bottom-right
-                [left, bottom]   // Bottom-left
+                [left, top], [right, top],
+                [right, bottom], [left, bottom]
             ];
 
             let cornerIndices = [];
@@ -138,30 +134,24 @@ function exportGmsh() {
 
     let gmshGeoContent = `// Auto-generated Gmsh geometry file\n` + nodes.join("\n") + "\n" + elements.join("\n");
 
-    // Create the .geo file
-    let geoBlob = new Blob([gmshGeoContent], { type: "text/plain" });
-    let geoFileName = "layout.geo";
-    let geoLink = document.createElement("a");
-    geoLink.href = URL.createObjectURL(geoBlob);
-    geoLink.download = geoFileName;
-    document.body.appendChild(geoLink);
-    geoLink.click();
-    document.body.removeChild(geoLink);
-
-    // (Optional) If running in an environment with Gmsh CLI installed, trigger conversion to .msh
-   fetch('http://127.0.0.1:5000/convert-to-msh', {  // Ensure port 5000
-    method: 'POST',
-    body: JSON.stringify({ geoFile: "layout.geo" }),
-    headers: { 'Content-Type': 'application/json' }
-})
-.then(response => response.json())
-.then(data => {
-    let mshLink = document.createElement("a");
-    mshLink.href = "http://127.0.0.1:5000/download-msh";  // Correct port
-    mshLink.download = "layout.msh";
-    document.body.appendChild(mshLink);
-    mshLink.click();
-    document.body.removeChild(mshLink);
-})
-.catch(error => console.error("Error:", error));
+    // Send the .geo content to Flask
+    fetch("http://127.0.0.1:5000/convert-to-msh", {
+        method: "POST",
+        body: JSON.stringify({ geoContent: gmshGeoContent, geoFile: "layout.geo" }),
+        headers: { "Content-Type": "application/json" }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error("Error:", data.error);
+        } else {
+            let mshLink = document.createElement("a");
+            mshLink.href = "http://127.0.0.1:5000/download-msh";
+            mshLink.download = "layout.msh";
+            document.body.appendChild(mshLink);
+            mshLink.click();
+            document.body.removeChild(mshLink);
+        }
+    })
+    .catch(error => console.error("Fetch Error:", error));
 }
