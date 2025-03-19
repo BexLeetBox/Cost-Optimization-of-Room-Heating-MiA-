@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.11/konva.min.js"></script>
+    <style>
+        #container {
+            border: 1px solid black;
+            width: 800px;
+            height: 500px;
+            display: inline-block;
+        }
+        #controls {
+            display: inline-block;
+            vertical-align: top;
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="roomWidth">Room Width (meters): </label>
+        <input type="number" id="roomWidth" value="5">
+        <label for="roomHeight">Room Height (meters): </label>
+        <input type="number" id="roomHeight" value="3">
+        <button onclick="defineRoom()">Define Room</button>
+    </div>
+    <div id="container"></div>
+    <div id="controls">
+        <p>Mode:</p>
+        <button onclick="setMode('Wall')">Wall</button>
+        <button onclick="setMode('Window')">Window</button>
+        <button onclick="setMode('Door')">Door</button>
+        <button onclick="setMode('Heating')">Heating Element</button>
+        <button id="exportBtn">Export to JSON</button>
+    </div>
+    
+    <script>
+        const stage = new Konva.Stage({
+            container: 'container',
+            width: 800,
+            height: 500,
+        });
+
+        const layer = new Konva.Layer();
+        stage.add(layer);
+
+        let mode = 'Wall';
+        let sectionStart = null;
+        let roomScale = 100; 
+        let room;
+        let boundaries = [];
+        let heatingElements = [];
+        let heatingPreview = null;
+        let drawingHeating = false;
+
+        function setMode(newMode) {
+            mode = newMode;
+            sectionStart = null;
+        }
+
+        function defineRoom() {
+            let widthMeters = parseFloat(document.getElementById('roomWidth').value);
+            let heightMeters = parseFloat(document.getElementById('roomHeight').value);
+            let scaledWidth = widthMeters * roomScale;
+            let scaledHeight = heightMeters * roomScale;
+
+            layer.destroyChildren();
+
+            room = new Konva.Rect({
+                x: 100,
+                y: 100,
+                width: scaledWidth,
+                height: scaledHeight,
+                stroke: 'black',
+                strokeWidth: 0,
+                draggable: false,
+            });
+            layer.add(room);
+
+            boundaries = [
+                { name: 'Top', x: 100, y: 100, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Bottom', x: 100, y: 100 + scaledHeight - 10, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Left', x: 100, y: 100, width: 10, height: scaledHeight, sections: [] },
+                { name: 'Right', x: 100 + scaledWidth - 10, y: 100, width: 10, height: scaledHeight, sections: [] }
+            ];
+
+            boundaries.forEach((b) => {
+                let boundary = new Konva.Rect({
+                    x: b.x,
+                    y: b.y,
+                    width: b.width,
+                    height: b.height,
+                    fill: 'gray',
+                    name: b.name,
+                    draggable: false,
+                });
+                layer.add(boundary);
+
+                boundary.on('click', (e) => {
+                    if (mode === 'Window' || mode === 'Door') {
+                        if (!sectionStart || sectionStart.boundary !== b.name) {
+                            sectionStart = { boundary: b.name, pos: e.target.getRelativePointerPosition() };
+                        } else {
+                            let sectionEnd = e.target.getRelativePointerPosition();
+                            if (b.name === 'Top' || b.name === 'Bottom') {
+                                let startX = Math.min(sectionStart.pos.x, sectionEnd.x);
+                                let width = Math.abs(sectionEnd.x - sectionStart.pos.x);
+                                let section = new Konva.Rect({
+                                    x: b.x + startX,
+                                    y: b.y,
+                                    width: width || b.width,
+                                    height: b.height,
+                                    fill: mode === 'Window' ? 'lightblue' : 'brown',
+                                });
+                                layer.add(section);
+                                b.sections.push({ type: mode, x: section.x(), y: section.y(), width: section.width(), height: section.height() });
+                                sectionStart = null;
+                                layer.draw();
+                            }
+                            else if (b.name == "Left" || b.name == "Right") {
+                                let startY = Math.min(sectionStart.pos.y, sectionEnd.y);
+                                let height = Math.abs(sectionEnd.y - sectionStart.pos.y);
+
+                                let section = new Konva.Rect({
+                                    y: b.y + startY,
+                                    x: b.x,
+                                    width: b.width,
+                                    height: height || b.height,
+                                    fill: mode === 'Window' ? 'lightblue' : 'brown',
+                                });
+                                layer.add(section);
+                                b.sections.push({ type: mode, x: section.x(), y: section.y(), width: section.width(), height: section.height() });
+                                sectionStart = null;
+                                layer.draw();
+                            }
+                        }
+                    }
+                });
+            });
+
+            layer.draw();
+        }
+
+        stage.on('mousedown', (e) => {
+            if (mode === 'Heating' && e.target === stage) {
+                let pos = stage.getPointerPosition();
+                heatingPreview = new Konva.Rect({
+                    x: pos.x,
+                    y: pos.y,
+                    width: 1,
+                    height: 1,
+                    fill: 'red',
+                    opacity: 0.5,
+                });
+                layer.add(heatingPreview);
+                drawingHeating = true;
+            }
+        });
+
+        stage.on('mousemove', (e) => {
+            if (drawingHeating && heatingPreview) {
+                let pos = stage.getPointerPosition();
+                let startX = heatingPreview.x();
+                let startY = heatingPreview.y();
+                heatingPreview.width(pos.x - startX);
+                heatingPreview.height(pos.y - startY);
+                layer.draw();
+            }
+        });
+
+        stage.on('mouseup', () => {
+            if (drawingHeating && heatingPreview) {
+                heatingPreview.opacity(1);
+                heatingPreview.draggable(true);
+                heatingElements.push(heatingPreview);
+                heatingPreview = null;
+                drawingHeating = false;
+                layer.draw();
+            }
+        });
+
+        function exportToJson() {
+            const roomData = {
+                boundaries: boundaries.map((b) => ({ name: b.name, sections: b.sections })),
+                heatingElements: heatingElements.map((h) => ({ x: h.x(), y: h.y(), width: h.width(), height: h.height() })),
+                roomSize: { width: room.width() / roomScale, height: room.height() / roomScale }
+            };
+            console.log(JSON.stringify(roomData, null, 2));
+        }
+
+        document.getElementById('exportBtn').addEventListener('click', exportToJson);
+    </script>
+</body>
+</html>
