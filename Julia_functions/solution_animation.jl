@@ -29,6 +29,8 @@ function draw(ysol)
 	display(fig)															  # display the plot
 end
 
+
+
 function savePVDall(ys, qs, ps)
     for k = 1:length(ys)
         if !isdir("tmpse$k")
@@ -61,10 +63,3 @@ function savePVDall(ys, qs, ps)
         end
     end
 end
-
-ysave = ys
-qsave = qs
-psave = ps
-costsave = costs
-
-savePVDall(ys, qs, ps)
