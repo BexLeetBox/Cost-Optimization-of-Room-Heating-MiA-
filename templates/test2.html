@@ -236,11 +236,42 @@
         });
 
         function exportToJson() {
+            const roomWidth = parseFloat(document.getElementById('roomWidth').value);
+            const roomHeight = parseFloat(document.getElementById('roomHeight').value);
+
             const roomData = {
-                boundaries: boundaries.map((b) => ({ name: b.name, sections: b.sections })),
-                heatingElements: heatingElements.map((h) => ({ x: h.x(), y: h.y(), width: h.width(), height: h.height() })),
-                roomSize: { width: room.width() / roomScale, height: room.height() / roomScale }
-            };
+                room: {
+                    width: roomWidth,
+                    height: roomHeight
+                },
+                boundaries: boundaries.map((b) => ({
+                    name: b.name,
+                    sections: b.sections.map((s) => {
+                        if (b.name === 'Top' || b.name === 'Bottom') {
+                            return {
+                                type: s.type,
+                                x1: s.x / roomScale,
+                                x2: (s.x + s.width) / roomScale,
+                                y: s.y / roomScale
+                            };
+                        } else {
+                            return {
+                                type: s.type,
+                                y1: s.y / roomScale,
+                                y2: (s.y + s.height) / roomScale,
+                                x: s.x / roomScale
+                            };
+                        }
+                    })
+                })),
+                heatingElements: heatingElements.map((h) => ({
+            x1: h.x() / roomScale,
+            x2: (h.x() + h.width()) / roomScale,
+            y1: h.y() / roomScale,
+            y2: (h.y() + h.height()) / roomScale
+        }))
+    };
+
             console.log(JSON.stringify(roomData, null, 2));
         }
 
