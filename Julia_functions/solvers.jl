@@ -13,18 +13,22 @@
 
 
 
+function AEsolver(solver, T,Q,Trialspace,Testspace;dΩ,dΓ=nothing,cache=nothing,A=nothing,W_dof=fill(0.0, num_free_dofs(Testspace)),Tfin=nothing, tF=1.0, constants=nothing)
 
+    c, ρ, k, h = constants
 
-function AEsolver(T,Q,Trialspace,Testspace;dΩ,dΓ=nothing,cache=nothing,A=nothing,W_dof=fill(0.0, num_free_dofs(Testspace)))
+    h_wall, h_window, h_door = h
+
+    dΓ_window, dΓ_door, dΓ_wall = dΓ 
+
 	a_AE_tconst(t, dtW, ψ) = ∫(c*dtW*ψ*ρ)dΩ
-	a_AE_tnonconst(t, W, ψ) = ∫(k * (∇(W) ⋅ ∇(ψ)))dΩ - ∫(h*W*ψ)dΓ
+	a_AE_tnonconst(t, W, ψ) = ∫(k * (∇(W) ⋅ ∇(ψ)))dΩ - (∫(h_wall*W*ψ)dΓ_wall + ∫(h_window*W*ψ)dΓ_window + ∫(h_door*W*ψ)dΓ_door)
 	l_AE(t, ψ) = ∫(0.0*ψ)dΩ
-	#l_AE(t, ψ) = γ*∫(((x->T(x,t))-Tfin)*ψ - tr(h*(x->Tout(x,t))*ψ))dΩ	
+
 	op_AE = TransientLinearFEOperator((a_AE_tnonconst, a_AE_tconst), l_AE, Trialspace, Testspace, constant_forms=(true, true))
-	# tableau = :SDIRK_2_2
-	# solver_rk = RungeKutta(ls, ls, Δt, tableau)
+
 	W_end=interpolate_everywhere(-γ*(T(tF)-Tfin)/c/ρ, Uspace(tF))
-	W = solve(ThetaMethod(LUSolver(), Δt, θ), op_AE, t0, tF, W_end)
+	W = solve(solver, op_AE, t0, tF, W_end)
 
 	W_copy = [collect((t, FEFunction(Trialspace, copy(get_free_dof_values(WW)))) for (t, WW) in W)...]
 	W_copy_reversed = reverse(W_copy)
@@ -35,12 +39,11 @@ function AEsolver(T,Q,Trialspace,Testspace;dΩ,dΓ=nothing,cache=nothing,A=nothi
 end
 
 
-function SEsolver(Qt, Trialspace, Testspace; dΩ, dΓ)
-    # Materialparametere
-    k_wall, h_wall = 5.0, 2.0
-    k_window, h_window = 0.8, 5.0
-    k_door, h_door = 1.0, 8.0
+function SEsolver(solver, Qt, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 
+    c, ρ, k, h = constants
+
+    h_wall, h_window, h_door = h
 
     dΓ_window, dΓ_door, dΓ_wall = dΓ 
 
@@ -48,12 +51,10 @@ function SEsolver(Qt, Trialspace, Testspace; dΩ, dΓ)
     a_SE_tconst(t, dtT, ϕ) = ∫(c*dtT*ϕ*ρ)dΩ
 
     a_SE_tnonconst(t, T, ϕ) =
-        ∫(k_wall * ∇(T) ⋅ ∇(ϕ))dΩ +
+        ∫(k * ∇(T) ⋅ ∇(ϕ))dΩ +
         ∫(h_wall * T * ϕ)dΓ_wall +
         ∫(h_window * T * ϕ)dΓ_window +
         ∫(h_door * T * ϕ)dΓ_door
-    
-    l_SE(t, ϕ) = ∫(Qt(t) * ϕ)dΩ + ∫(Tout(t) * ϕ * h)dΓ
 
     l_SE(t, ϕ) =
         ∫(Qt(t) * ϕ)dΩ +

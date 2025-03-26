@@ -8,71 +8,107 @@ function s_min(Q,T,W,gradient;solveSE, solveAE, spaces, w=nothing, dΩ, dΓ=noth
 	return -L2NormSquaredOfv/(2*(L2NormSquaredpv+γ/2*L2NormSquaredSv)) # -s_min because originally v=-∇e but calculating this costs much more time
 end
 
-function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f, iter_max=1000, tol=1e-3, P=x->x, u0=nothing, w=nothing, s_min=nothing, sminargs=nothing, Δt=0.05, t0=0.0, tF, saveall::Bool=false)
-	Trialspace, Testspace, Qspace = spaces
+
+
+function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f, iter_max=1000, tol=1e-3, P=x->x, u0=nothing, w=nothing, s_min=nothing, sminargs=nothing, armijoparas=(ρ=1/2, α_0=1, α_min=1/2^5, σ=1e-4), Δt=0.01, t0=0.0, tF, saveall::Bool=false, Tout=nothing, constants=nothing, Tfin)
+
+	Trialspace, Testspace, Qspace = spaces                                  # Extract spaces
 	
+	ls = LUSolver()
+	θ = 0.5
+	solver = ThetaMethod(ls, Δt, θ)
+
 	q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]    # Initialize u with some random values and apply projection
 	qfun(t)=find(q,t)
-	println("q computed")
 
-	y, cacheSE, A_SE = solveSE(Q,Trialspace,Testspace,w=w,dΩ=dΩ,dΓ=dΓ)  # initial SE solve
-	#y = FEFunction(Trialspace, y_dof)
-	yfun(t)=find(y,t)
-	println("y computed")
+	T, cacheSE, A_SE = SEsolver(solver, Qt, Trialspace, Testspace; dΩ, dΓ, Tout, constants)  # initial SE solve
 	
-	p, cacheAE, A_AE = solveAE(yfun,q,Trialspace,Testspace,dΩ=dΩ,dΓ=dΓ)      # initial AE solve
+	Tfun(t)=find(T,t)
+	println("T computed")
+
+	W, cacheAE, A_AE = solveAE(solver, Tfun,q,Trialspace,Testspace,dΩ=dΩ,dΓ=dΓ, Tfin=Tfin,tF=tF, constants=constants)      # initial AE solve
 	#p = FEFunction(Testspace, p_dof)
-	println("p computed")
+	println("W computed")
 	
-	cost = J(y, q)
-	fgrad =  ∇f(q, p, y)														# Compute initial gradient
+	cost = J(T, q)
+	fgrad =  ∇f(q, T, W)														# Compute initial gradient
 	L2fgrad_save = L2norm(fgrad)                                       # Compute norm of initial gradient
 
 	if saveall
 		qs=[q]                     # save the solutions - only if really necessary
-		ys=[y]
-		ps=[p]
+		Ts=[T]
+		Ws=[W]
 		costs=[cost]
 	else
-		qs,ys,ps=[],[],[]
+		qs,Ts,Ws=[],[],[]
 	end
+
+
 	for k=1:iter_max
 		println("entered for loop, E=$cost")
-		q_new = y_new = cost_new = qfunnew = nothing
-		s = s_min(q,y,p,fgrad;solveSE=solveSE, solveAE=solveAE, spaces=spaces, w=w, dΩ=dΩ, dΓ=dΓ, Δt=Δt, t0=t0, tF=tF)
-		println("s_min = $s")
-		q_new = [(t,interpolate_everywhere(qfun(t) - s*grad, Qspace(t))) for (t,grad) in fgrad] #|> Proj interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
-		qfunnew=t->find(q_new,t)
-		y_new, cacheSE = solveSE(qfunnew,Trialspace,Testspace;w=w,dΩ=dΩ,dΓ=dΓ)
-		#y_new = FEFunction(Trialspace, y_dof)
-		cost_new = J(y_new,q_new)
-		
+		# s_min = nothing
+		if s_min != nothing
+			q_new = T_new = cost_new = qfunnew = nothing
+
+			# s = s_min(q,y,p,fgrad;solveSE=solveSE, solveAE=solveAE, spaces=spaces, w=w, dΩ=dΩ, dΓ=dΓ, Δt=Δt, t0=t0, tF=tF)
+			# println("step $k, s_min = $s")
+	
+			q_new = [(t,interpolate_everywhere((qfun(t) - 0.00001*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> Proj #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
+			# q_new = [(t,interpolate_everywhere((qfun(t) - 0.0001*grad), Qspace(t))) for (t,grad) in fgrad] #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
+	
+			qfunnew=t->find(q_new,t)
+			T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
+			#y_new = FEFunction(Trialspace, y_dof)	
+			cost_new = J(T_new,q_new)	
+		else
+			ρ, α_0, α_min, σ = armijoparas
+			cost_new = cost
+			L2fgrad = L2fgrad_save
+			α = α_0
+			while α > α_min
+				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad), Qspace(t))) for (t,grad) in fgrad] #|> Proj    # Compute tentative new control function defined by current line search parameter
+				qfunnew=t->find(q_new,t)
+
+				T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
+				
+				#y_new = FEFunction(Trialspace, y_dof)
+
+				cost_new = J(T_new, q_new)                                  # Compare decrease in functional and accept if sufficient
+				if cost_new < cost - σ*α*L2fgrad^2
+					break
+				else
+					α *= ρ
+				end
+			end
+			if α <= α_min
+				println("Armijo rule failed, α = $α")
+				break
+			end
+		end
+		# println("α = $α")
+
 		q = q_new
-		y = y_new
+		T = T_new
 		qfun = qfunnew
 		cost = cost_new
 		
-		if k % 10 == 0
-			println("iteration: $k,   cost = $cost")
-		end
-
 		if saveall
 			push!(qs,q)
-			push!(ys,y)
+			push!(Ts,T)
 			push!(costs,cost)
+			push!(Ws,W)
 		end
-
-		yfun=t->find(y,t)
-		p, cacheAE = solveAE(yfun,q,Trialspace,Testspace;dΩ=dΩ,dΓ=dΓ)
-		#p = FEFunction(Testspace, p_dof)
-
-		fgrad = ∇f(q, p, y)
+		Tfun=t->find(T,t)
+		W, cacheAE = solveAE(solver, Tfun,q,Trialspace,Testspace,dΩ=dΩ,dΓ=dΓ, Tfin=Tfin,tF=tF, constants=constants)
+		
+		fgrad = ∇f(q, T, W)
 		L2fgrad = L2norm(fgrad)
-		push!(ps,p)
+		
 
 		if L2fgrad < tol*L2fgrad_save                           # loop break condition - better ideas are appreciated
 			break
 		end
+	
 	end
-	return saveall ? (ys,qs,ps,costs) : (y,q,p,cost)                    	# give back either all saved variables or only end result
+	return saveall ? (Ts,qs,Ws,costs) : (T,q,W,cost)                    	# give back either all saved variables or only end result
 end
