@@ -9,8 +9,8 @@
     <style>
         #container {
             border: 1px solid black;
-            width: 800px;
-            height: 500px;
+            width: 100%;
+            height: 100%;
             display: inline-block;
         }
         #controls {
@@ -18,9 +18,14 @@
             vertical-align: top;
             margin-left: 20px;
         }
+        canvas {
+            cursor: crosshair;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
-<body>
+<body onload="defineRoom()">
     <div>
         <label for="roomWidth">Room Width (meters): </label>
         <input type="number" id="roomWidth" value="5">
@@ -31,7 +36,6 @@
     <div id="container"></div>
     <div id="controls">
         <p>Mode:</p>
-        <button onclick="setMode('Wall')">Wall</button>
         <button onclick="setMode('Window')">Window</button>
         <button onclick="setMode('Door')">Door</button>
         <button onclick="setMode('Heating')">Heating Element</button>
@@ -42,8 +46,8 @@
     <script>
         const stage = new Konva.Stage({
             container: 'container',
-            width: 800,
-            height: 500,
+            width: 10000,
+            height: 2000,
         });
 
         const layer = new Konva.Layer();
@@ -85,10 +89,10 @@
             layer.add(room);
 
             boundaries = [
-                { name: 'Top', x: 100, y: 100, width: scaledWidth, height: 10, sections: [] },
-                { name: 'Bottom', x: 100, y: 100 + scaledHeight - 10, width: scaledWidth, height: 10, sections: [] },
-                { name: 'Left', x: 100, y: 100, width: 10, height: scaledHeight, sections: [] },
-                { name: 'Right', x: 100 + scaledWidth - 10, y: 100, width: 10, height: scaledHeight, sections: [] }
+                { name: 'Top', x: 50, y: 50, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Bottom', x: 50, y: 50 + scaledHeight - 10, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Left', x: 50, y: 50, width: 10, height: scaledHeight, sections: [] },
+                { name: 'Right', x: 50 + scaledWidth - 10, y: 50, width: 10, height: scaledHeight, sections: [] }
             ];
 
             boundaries.forEach((b) => {
@@ -257,25 +261,25 @@
                         if (b.name === 'Top' || b.name === 'Bottom') {
                             return {
                                 type: s.type,
-                                x1: s.x / roomScale,
-                                x2: (s.x + s.width) / roomScale,
-                                y: s.y / roomScale
+                                x1: s.x,
+                                x2: (s.x + s.width),
+                                y: s.y 
                             };
                         } else {
                             return {
                                 type: s.type,
-                                y1: s.y / roomScale,
-                                y2: (s.y + s.height) / roomScale,
-                                x: s.x / roomScale
+                                y1: s.y,
+                                y2: (s.y + s.height),
+                                x: s.x
                             };
                         }
                     })
                 })),
                 heatingElements: heatingElements.map((h) => ({
-            x1: h.x() / roomScale,
-            x2: (h.x() + h.width()) / roomScale,
-            y1: h.y() / roomScale,
-            y2: (h.y() + h.height()) / roomScale
+            x1: h.x(),
+            x2: (h.x() + h.width()),
+            y1: h.y(),
+            y2: (h.y() + h.height())
         }))
     };
 
