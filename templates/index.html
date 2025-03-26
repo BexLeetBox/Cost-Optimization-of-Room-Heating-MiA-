@@ -320,10 +320,10 @@
                     })
                 })),
                 heatingElements: heatingElements.map((h) => ({
-                    x1: min((h.x()-50),(h.x() + h.width()-50)),
-                    x2: max((h.x()-50),(h.x() + h.width()-50)),
-                    y1: min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100)),
-                    y2: max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))
+                    x1: Math.min((h.x()-50),(h.x() + h.width()-50)),
+                    x2: Math.max((h.x()-50),(h.x() + h.width()-50)),
+                    y1: Math.min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100)),
+                    y2: Math.max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))
                 }))
             };
 
