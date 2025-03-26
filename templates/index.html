@@ -124,8 +124,8 @@
             layer.destroyChildren();
 
             room = new Konva.Rect({
-                x: 100,
-                y: 100,
+                x: 50,
+                y: 50,
                 width: scaledWidth,
                 height: scaledHeight,
                 stroke: 'black',
@@ -298,8 +298,8 @@
 
             const roomData = {
                 room: {
-                    width: roomWidth,
-                    height: roomHeight
+                    width: roomWidth*100,
+                    height: roomHeight*100
                 },
                 boundaries: boundaries.map((b) => ({
                     name: b.name,
@@ -307,25 +307,23 @@
                         if (b.name === 'Top' || b.name === 'Bottom') {
                             return {
                                 type: s.type,
-                                x1: s.x,
-                                x2: (s.x + s.width),
-                                y: s.y
+                                x1: s.x-50,
+                                x2: (s.x + s.width)-50,
                             };
                         } else {
                             return {
                                 type: s.type,
-                                y1: s.y,
-                                y2: (s.y + s.height),
-                                x: s.x
+                                y1: -(s.y + s.height-50)+roomHeight*100,
+                                y2: -(s.y-50)+roomHeight*100,
                             };
                         }
                     })
                 })),
                 heatingElements: heatingElements.map((h) => ({
-                    x1: h.x(),
-                    x2: (h.x() + h.width()),
-                    y1: h.y(),
-                    y2: (h.y() + h.height())
+                    x1: min((h.x()-50),(h.x() + h.width()-50)),
+                    x2: max((h.x()-50),(h.x() + h.width()-50)),
+                    y1: min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100)),
+                    y2: max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))
                 }))
             };
 
