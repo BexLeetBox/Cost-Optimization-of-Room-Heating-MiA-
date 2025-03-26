@@ -167,8 +167,15 @@
         // Heating element drawing inside the room.
         stage.on('mousedown', (e) => {
             if (mode === 'Heating' && room) {
+                let target = e.target;
+
+                // Prevent drawing if clicking on an existing heating element
+                if (target.isHeating) {
+                    return;
+                }
+
                 let pos = stage.getPointerPosition();
-                // Allow drawing only if click is inside the room boundaries.
+                // Allow drawing only if click is inside the room boundaries
                 if (pos.x >= room.x() && pos.x <= room.x() + room.width() &&
                     pos.y >= room.y() && pos.y <= room.y() + room.height()) {
                     heatingPreview = new Konva.Rect({
