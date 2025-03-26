@@ -2,19 +2,100 @@ let polygonMode = false;
 let polygonPoints = [];
 let tempCircles = [];  // to visualize clicked points
 let firstPoint = null;
-
-
+let windowMode = false;
 
 const gridSize = 50;         // Size of the grid cells
 let hoverCircle = null;      // Circle for the hover highlight
 let snapToGrid = true;
 
 
+function addWindowMode() {
+  // Switch into "Add Window" mode
+  windowMode = true;
+  console.log("Window mode enabled. Click a polygon corner to place a window.");
+}
 
-    function toggleSnap() {
-      snapToGrid = !snapToGrid;
-      console.log("Snap to grid =", snapToGrid);
+function findNearestPolygonCorner(x, y, threshold = 20) {
+  let minDist = Infinity;
+  let bestCorner = null;
+
+  canvas.forEachObject(obj => {
+    if (obj.type === "polygon") {
+      let corners = getPolygonCorners(obj);
+      for (let c of corners) {
+        let dist = distance(x, y, c.x, c.y);
+        if (dist < minDist) {
+          minDist = dist;
+          bestCorner = c;
+        }
+      }
     }
+  });
+
+  // If closest corner is within threshold, return it
+  if (bestCorner && minDist < threshold) {
+    return bestCorner;
+  } else {
+    return null;
+  }
+}
+
+// Euclidean distance
+function distance(x1, y1, x2, y2) {
+  return Math.sqrt((x1 - x2)**2 + (y1 - y2)**2);
+}
+
+canvas.on('mouse:down', function (event) {
+  if (!windowMode) return;  // Only do this if user is placing a window
+
+  let pointer = canvas.getPointer(event.e);
+  let mx = pointer.x, my = pointer.y;
+
+  // Find a polygon corner within 20px
+  let corner = findNearestPolygonCorner(mx, my, 20);
+  if (corner) {
+    // Place a small "window" rect
+    let windowRect = new fabric.Rect({
+      left: corner.x - 25,   // center the window if you want
+      top: corner.y - 10,
+      width: 50,
+      height: 20,
+      fill: 'blue'
+    });
+    canvas.add(windowRect);
+    // Turn off window mode if you only want one
+    windowMode = false;
+    console.log("Placed window at corner:", corner);
+  } else {
+    console.log("No nearby corner found.");
+  }
+});
+
+
+function getPolygonCorners(polygon) {
+  // If polygons aren't rotated/scaled, you can do a simple offset by polygon.left/top.
+  // For more complex transformations, you'd use fabric.util.transformPoint().
+
+  let offsetX = polygon.left;
+  let offsetY = polygon.top;
+
+  let corners = [];
+  for (let pt of polygon.points) {
+    // convert local coords to canvas coords
+    let cx = pt.x + offsetX;
+    let cy = pt.y + offsetY;
+    corners.push({ x: cx, y: cy });
+  }
+  return corners;
+}
+
+
+function toggleSnap() {
+      snapToGrid = !snapToGrid;
+    }
+
+
+
 
 const canvas = new fabric.Canvas('canvas', {
     width: 800,
@@ -102,8 +183,6 @@ let polygon = new fabric.Polygon(polygonPoints, {
 
   canvas.renderAll();
 }
-
-
 
 canvas.on('mouse:down', function (opt) {
   if (!polygonMode) return;  // Only do this if we're drawing a polygon

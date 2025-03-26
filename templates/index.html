@@ -4,16 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Heating Cost Optimizer</title>
     <link rel="stylesheet" href="../static/styles.css">
-    
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.3.11/konva.min.js"></script>
 
 </head>
 
 <body>
     <h1>Weather and Energy Prices Dashboard</h1>
-
-    <div class="section">
+    <!--
+     <div class="section">
         <h2>Get Energy Prices</h2>
         <button onclick="fetchEnergyPrices()">Fetch Energy Prices</button>
         <button onclick="toggleDisplay('energy-prices')">Toggle Display</button>
@@ -28,16 +28,18 @@
         <button onclick="toggleDisplay('weather-data')">Toggle Display</button>
         <pre id="weather-data" style="display: none;"></pre>
     </div>
+    -->
+
 
     <div class="section">
-        <h2>Get Merged Data (Energy Prices + Weather)</h2>
+        <h2>Get Merged Data (Energy Prices + Weather data)</h2>
         <input type="text" id="merged-latitude" placeholder="Enter Latitude">
         <input type="text" id="merged-longitude" placeholder="Enter Longitude">
         <button onclick="fetchMergedData()">Fetch Merged Data</button>
         <button onclick="toggleDisplay('merged-data')">Toggle Display</button>
         <pre id="merged-data" style="display: none;"></pre>
     </div>
-
+    <!--
     <div class="section">
         <h2>Heat Conduction Simulation</h2>
         <button onclick="runSimulation()">Run Simulation</button>
@@ -45,14 +47,293 @@
             <img src="../static/images/Spinner@1x-0.8s-200px-200px.gif" width="50">
 
         </div>
+        <div id="Konva"></div>
         <p id="status"></p>
         
     </div>
+    
+    
+    -->
 
-    
-    
+
+    <div class="section">
+        <label for="roomWidth">Room Width (meters): </label>
+        <input type="number" id="roomWidth" value="5">
+        <label for="roomHeight">Room Height (meters): </label>
+        <input type="number" id="roomHeight" value="3">
+        <label for="roomHeight">Start temperature (celcius): </label>
+        <input type="number" id="startTemp" value="10">
+        <label for="roomHeight">Target temperature (celcius): </label>
+        <input type="number" id="targetTemp" value="20">
+        <button onclick="defineRoom()">Define Room</button>
+    </div>
+    <div id="container"></div>
+    <div class="section">
+        <p>Mode:</p>
+        <button onclick="setMode('Window')">Window</button>
+        <button onclick="setMode('Door')">Door</button>
+        <button onclick="setMode('Heating')">Heating Element</button>
+        <button onclick="setMode('Delete')">Delete</button>
+        <button id="exportBtn">Export to JSON</button>
+    </div>
+
+    <script></script>
+
+
+
 
     <script src="../static/script.js"></script>
+    <script>
+
+        const container = document.getElementById('container');
+        const width = container.clientWidth;
+        const height = container.clientHeight-.15*container.clientHeight;
+        console.log(width, height)
+
+        const stage = new Konva.Stage({
+            container: 'container',
+            width: width,
+            height: height,
+        });
+
+        const layer = new Konva.Layer();
+        stage.add(layer);
+
+        let mode = 'Wall';
+        let sectionStart = null;
+        let roomScale = 100;
+        let room;
+        let boundaries = [];
+        let heatingElements = [];
+        let heatingPreview = null;
+        let drawingHeating = false;
+        // Minimal pixel distance to create a section
+        const minSectionSize = 5;
+
+        function setMode(newMode) {
+            mode = newMode;
+            sectionStart = null;
+        }
+
+        function defineRoom() {
+            let widthMeters = parseFloat(document.getElementById('roomWidth').value);
+            let heightMeters = parseFloat(document.getElementById('roomHeight').value);
+            let scaledWidth = widthMeters * roomScale;
+            let scaledHeight = heightMeters * roomScale;
+
+            layer.destroyChildren();
+
+            room = new Konva.Rect({
+                x: 100,
+                y: 100,
+                width: scaledWidth,
+                height: scaledHeight,
+                stroke: 'black',
+                strokeWidth: 0,
+                draggable: false,
+            });
+            layer.add(room);
+
+            boundaries = [
+                { name: 'Top', x: 50, y: 50, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Bottom', x: 50, y: 50 + scaledHeight - 10, width: scaledWidth, height: 10, sections: [] },
+                { name: 'Left', x: 50, y: 50, width: 10, height: scaledHeight, sections: [] },
+                { name: 'Right', x: 50 + scaledWidth - 10, y: 50, width: 10, height: scaledHeight, sections: [] }
+            ];
+
+            boundaries.forEach((b) => {
+                let boundary = new Konva.Rect({
+                    x: b.x,
+                    y: b.y,
+                    width: b.width,
+                    height: b.height,
+                    fill: 'gray',
+                    name: b.name,
+                    draggable: false,
+                });
+                layer.add(boundary);
+
+                boundary.on('click', (e) => {
+                    if (mode === 'Window' || mode === 'Door') {
+                        if (!sectionStart || sectionStart.boundary !== b.name) {
+                            sectionStart = { boundary: b.name, pos: e.target.getRelativePointerPosition() };
+                        } else {
+                            let sectionEnd = e.target.getRelativePointerPosition();
+                            if (b.name === 'Top' || b.name === 'Bottom') {
+                                let startX = Math.min(sectionStart.pos.x, sectionEnd.x);
+                                let width = Math.abs(sectionEnd.x - sectionStart.pos.x);
+                                // Only create a section if the drawn segment is big enough.
+                                if (width < minSectionSize) {
+                                    sectionStart = null;
+                                    return;
+                                }
+                                let section = new Konva.Rect({
+                                    x: b.x + startX,
+                                    y: b.y,
+                                    width: width,
+                                    height: b.height,
+                                    fill: mode === 'Window' ? 'lightblue' : 'brown',
+                                });
+                                section.isSection = true;
+                                section.boundary = b.name;
+                                layer.add(section);
+                                let sectionData = { type: mode, x: section.x(), y: section.y(), width: section.width(), height: section.height() };
+                                b.sections.push(sectionData);
+                                section.sectionData = sectionData;
+                                sectionStart = null;
+                                layer.draw();
+                            } else if (b.name === "Left" || b.name === "Right") {
+                                let startY = Math.min(sectionStart.pos.y, sectionEnd.y);
+                                let height = Math.abs(sectionEnd.y - sectionStart.pos.y);
+                                // Only create a section if the drawn segment is big enough.
+                                if (height < minSectionSize) {
+                                    sectionStart = null;
+                                    return;
+                                }
+                                let section = new Konva.Rect({
+                                    y: b.y + startY,
+                                    x: b.x,
+                                    width: b.width,
+                                    height: height,
+                                    fill: mode === 'Window' ? 'lightblue' : 'brown',
+                                });
+                                section.isSection = true;
+                                section.boundary = b.name;
+                                layer.add(section);
+                                let sectionData = { type: mode, x: section.x(), y: section.y(), width: section.width(), height: section.height() };
+                                b.sections.push(sectionData);
+                                section.sectionData = sectionData;
+                                sectionStart = null;
+                                layer.draw();
+                            }
+                        }
+                    }
+                });
+            });
+
+            layer.draw();
+        }
+
+        // Heating element drawing inside the room.
+        stage.on('mousedown', (e) => {
+            if (mode === 'Heating' && room) {
+                let target = e.target;
+
+                // Prevent drawing if clicking on an existing heating element
+                if (target.isHeating) {
+                    return;
+                }
+
+                let pos = stage.getPointerPosition();
+                // Allow drawing only if click is inside the room boundaries
+                if (pos.x >= room.x() && pos.x <= room.x() + room.width() &&
+                    pos.y >= room.y() && pos.y <= room.y() + room.height()) {
+                    heatingPreview = new Konva.Rect({
+                        x: pos.x,
+                        y: pos.y,
+                        width: 1,
+                        height: 1,
+                        fill: 'red',
+                        opacity: 0.5,
+                    });
+                    layer.add(heatingPreview);
+                    drawingHeating = true;
+                }
+            }
+        });
+
+        stage.on('mousemove', (e) => {
+            if (drawingHeating && heatingPreview) {
+                let pos = stage.getPointerPosition();
+                let startX = heatingPreview.x();
+                let startY = heatingPreview.y();
+                heatingPreview.width(pos.x - startX);
+                heatingPreview.height(pos.y - startY);
+                layer.draw();
+            }
+        });
+
+        stage.on('mouseup', () => {
+            if (drawingHeating && heatingPreview) {
+                heatingPreview.opacity(1);
+                heatingPreview.draggable(true);
+                heatingPreview.isHeating = true;
+                heatingElements.push(heatingPreview);
+                heatingPreview = null;
+                drawingHeating = false;
+                layer.draw();
+            }
+        });
+
+        // Global stage click handler for Delete mode.
+        stage.on('click', (e) => {
+            if (mode === 'Delete') {
+                let target = e.target;
+                // Do nothing if clicking on stage, room or walls.
+                const boundaryNames = ['Top', 'Bottom', 'Left', 'Right'];
+                if (target === stage || target === room || boundaryNames.includes(target.getAttr('name'))) {
+                    return;
+                }
+                // If it is a window/door section, update the corresponding boundary's sections.
+                if (target.isSection) {
+                    let boundary = boundaries.find(b => b.name === target.boundary);
+                    if (boundary) {
+                        boundary.sections = boundary.sections.filter(s => {
+                            return !(s.x === target.sectionData.x && s.y === target.sectionData.y && s.width === target.sectionData.width && s.height === target.sectionData.height && s.type === target.sectionData.type);
+                        });
+                    }
+                }
+                // If it's a heating element, remove it from the heatingElements array.
+                if (target.isHeating) {
+                    heatingElements = heatingElements.filter(h => h !== target);
+                }
+                target.destroy();
+                layer.draw();
+            }
+        });
+
+        function exportToJson() {
+            const roomWidth = parseFloat(document.getElementById('roomWidth').value);
+            const roomHeight = parseFloat(document.getElementById('roomHeight').value);
+
+            const roomData = {
+                room: {
+                    width: roomWidth,
+                    height: roomHeight
+                },
+                boundaries: boundaries.map((b) => ({
+                    name: b.name,
+                    sections: b.sections.map((s) => {
+                        if (b.name === 'Top' || b.name === 'Bottom') {
+                            return {
+                                type: s.type,
+                                x1: s.x,
+                                x2: (s.x + s.width),
+                                y: s.y
+                            };
+                        } else {
+                            return {
+                                type: s.type,
+                                y1: s.y,
+                                y2: (s.y + s.height),
+                                x: s.x
+                            };
+                        }
+                    })
+                })),
+                heatingElements: heatingElements.map((h) => ({
+                    x1: h.x(),
+                    x2: (h.x() + h.width()),
+                    y1: h.y(),
+                    y2: (h.y() + h.height())
+                }))
+            };
+
+            console.log(JSON.stringify(roomData, null, 2));
+        }
+
+        document.getElementById('exportBtn').addEventListener('click', exportToJson);
+    </script>
 </body>
 
 </html>

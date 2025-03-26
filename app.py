@@ -22,6 +22,8 @@ os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 def home():
     return render_template('index.html')
 
+
+
 def convert_to_norway_time(timestamp):
     """Convert UTC time to Norway time (CET/CEST)."""
     return pd.to_datetime(timestamp).tz_convert(NORWAY_TZ)
