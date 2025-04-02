@@ -21,6 +21,10 @@ function get_room(json_file)
             end
         end
     end
+    
 
-    return width, height, windows, doors
+    heating_elem = [[elem["x1"], elem["x2"], elem["y1"], elem["y2"]] for elem in data["heatingElements"]]
+    
+
+    return width, height, windows, doors, heating_elem
 end

@@ -10,7 +10,7 @@ end
 
 
 
-function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f, iter_max=1000, tol=1e-3, P=x->x, u0=nothing, w=nothing, s_min=nothing, sminargs=nothing, armijoparas=(ρ=1/2, α_0=1, α_min=1/2^5, σ=1e-4), Δt=0.01, t0=0.0, tF, saveall::Bool=false, Tout=nothing, constants=nothing, Tfin)
+function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f, iter_max=1000, tol=1e-3, P=x->x, u0=nothing, w=nothing, s_min=nothing, sminargs=nothing, armijoparas=(ρ=1/2, α_0=1, α_min=1/2^5, σ=1e-4), Δt=0.01, t0=0.0, tF, saveall::Bool=false, Tout=nothing, constants=nothing, Tfin, q_pos)
 
 	Trialspace, Testspace, Qspace = spaces                                  # Extract spaces
 	
@@ -45,8 +45,8 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 
 
 	for k=1:iter_max
-		println("entered for loop, E=$cost")
-		# s_min = nothing
+		println("entered for loop, E=$cost, k = $k")
+		s_min = nothing
 		if s_min != nothing
 			q_new = T_new = cost_new = qfunnew = nothing
 
@@ -66,15 +66,15 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			L2fgrad = L2fgrad_save
 			α = α_0
 			while α > α_min
-				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad), Qspace(t))) for (t,grad) in fgrad] #|> Proj    # Compute tentative new control function defined by current line search parameter
+				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> proj    # Compute tentative new control function defined by current line search parameter
 				qfunnew=t->find(q_new,t)
 
 				T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 				
 				#y_new = FEFunction(Trialspace, y_dof)
-
+				println("α = $α, new_cost = $cost_new")
 				cost_new = J(T_new, q_new)                                  # Compare decrease in functional and accept if sufficient
-				if cost_new < cost - σ*α*L2fgrad^2
+				if cost_new < cost #- σ*α*L2fgrad^2
 					break
 				else
 					α *= ρ
