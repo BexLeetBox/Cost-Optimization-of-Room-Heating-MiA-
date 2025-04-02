@@ -1,5 +1,11 @@
 function fetchEnergyPrices() {
-  fetch("/energy-prices")
+  // Get the selected region code from the dropdown
+  const regionSelect = document.getElementById("region-select");
+  const regionCode = regionSelect.value;
+
+  
+  // Fetch energy prices with the selected region code
+  fetch(`/energy-prices?region_code=${regionCode}`)
     .then((response) => response.json())
     .then((data) => {
       const display = document.getElementById("energy-prices");
@@ -31,13 +37,17 @@ function fetchWeather() {
 function fetchMergedData() {
   const lat = document.getElementById("merged-latitude").value;
   const lon = document.getElementById("merged-longitude").value;
+  const regionSelect = document.getElementById("region-select");
+  const regionCode = regionSelect.value;
+
+  console.log(regionCode)
 
   if (!lat || !lon) {
     alert("Please enter both latitude and longitude.");
     return;
   }
 
-  fetch(`/merged-data?lat=${lat}&lon=${lon}`)
+  fetch(`/merged-data?lat=${lat}&lon=${lon}&region_code=${regionCode}`)
     .then((response) => response.json())
     .then((data) => {
       const display = document.getElementById("merged-data");

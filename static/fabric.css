@@ -42,3 +42,9 @@ button:hover {
     padding: 10px;
     background-color: white;
 }
+
+
+.select-items {
+    background-color: red;
+    color: red;
+}

@@ -28,18 +28,19 @@ def convert_to_norway_time(timestamp):
     """Convert UTC time to Norway time (CET/CEST)."""
     return pd.to_datetime(timestamp).tz_convert(NORWAY_TZ)
 
-def fetch_energy_prices():
+def fetch_energy_prices(region_code):
     """Fetches energy prices for the current day and converts time to Norway timezone."""
     # Get today's date in Norway timezone
     now = datetime.now(pytz.timezone("Europe/Oslo"))
     today_str = now.strftime("%Y/%m-%d")  # Format as YYYY/MM-DD
 
-    # Update API URL with today's date
-    url = f"https://www.hvakosterstrommen.no/api/v1/prices/{today_str}_NO5.json"
+    # Update API URL with today's date and region code
+    url = f"https://www.hvakosterstrommen.no/api/v1/prices/{today_str}_{region_code}.json"
 
+    print(region_code)
     response = requests.get(url)
     if response.status_code != 200:
-        return None, {"error": f"Failed to retrieve energy prices for {today_str}"}
+        return None, {"error": f"Failed to retrieve energy prices for {today_str} in region {region_code}"}
     
     energy_data = response.json()
     for entry in energy_data:
@@ -61,7 +62,7 @@ def fetch_weather_data(lat, lon):
     weather_records = []
     for entry in weather_data["properties"]["timeseries"]:
         time = pd.to_datetime(entry["time"]).tz_convert(NORWAY_TZ)
-        temperature = entry["data"]["instant"]["details"].get("air_temperature", None)-273.15
+        temperature = entry["data"]["instant"]["details"].get("air_temperature", None)+273.15
         weather_records.append({"time": time, "air_temperature": temperature})
     
     return weather_records, None
@@ -71,11 +72,13 @@ def get_merged_data():
     """Fetches and merges energy prices with weather data based on time."""
     lat = request.args.get('lat')
     lon = request.args.get('lon')
+    print(request.args.get('region_code'))
+    region_code = request.args.get('region_code', 'NO5')  # Default to NO5 if not provided
     if not lat or not lon:
         return jsonify({"error": "Please provide 'lat' and 'lon' query parameters."}), 400
     
     # Fetch data using the correct helper functions
-    energy_data, energy_error = fetch_energy_prices()
+    energy_data, energy_error = fetch_energy_prices(region_code)
     weather_data, weather_error = fetch_weather_data(lat, lon)
     
     if energy_error:
