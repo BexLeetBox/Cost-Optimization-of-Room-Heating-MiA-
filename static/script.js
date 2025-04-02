@@ -339,23 +339,23 @@ function exportToJson() {
                 if (b.name === 'Top' || b.name === 'Bottom') {
                     return {
                         type: s.type,
-                        x1: s.x-50,
-                        x2: (s.x + s.width)-50,
+                        x1: (s.x-50)/100,
+                        x2: ((s.x + s.width)-50)/100,
                     };
                 } else {
                     return {
                         type: s.type,
-                        y1: -(s.y + s.height-50)+roomHeight*100,
-                        y2: -(s.y-50)+roomHeight*100,
+                        y1: (-(s.y + s.height-50)+roomHeight*100)/100,
+                        y2: (-(s.y-50)+roomHeight*100)/100,
                     };
                 }
             })
         })),
         heatingElements: heatingElements.map((h) => ({
-            x1: Math.min((h.x()-50),(h.x() + h.width()-50)),
-            x2: Math.max((h.x()-50),(h.x() + h.width()-50)),
-            y1: Math.min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100)),
-            y2: Math.max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))
+            x1: Math.min((h.x()-50),(h.x() + h.width()-50))/100,
+            x2: Math.max((h.x()-50),(h.x() + h.width()-50))/100,
+            y1: Math.min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))/100,
+            y2: Math.max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))/100
         }))
     };
 
