@@ -85,7 +85,7 @@ function runSimulation() {
         .catch(error => {
             console.error('Error running simulation:', error);
             statusElement.innerText = "Error: Simulation failed.";
-            statusElement.style.color = "red";
+            statusElement.style.color = "#D61A3C";
             spinner.style.display = "none"; // Hide spinner
         });
 }
@@ -175,7 +175,7 @@ function defineRoom() {
             y: b.y,
             width: b.width,
             height: b.height,
-            fill: 'gray',
+            fill: '#454547',
             name: b.name,
             draggable: false,
         });
@@ -200,7 +200,7 @@ function defineRoom() {
                             y: b.y,
                             width: width,
                             height: b.height,
-                            fill: mode === 'Window' ? 'lightblue' : 'brown',
+                            fill: mode === 'Window' ? '#75afe9' : '#8F250C',
                         });
                         section.isSection = true;
                         section.boundary = b.name;
@@ -223,7 +223,7 @@ function defineRoom() {
                             x: b.x,
                             width: b.width,
                             height: height,
-                            fill: mode === 'Window' ? 'lightblue' : 'brown',
+                            fill: mode === 'Window' ? '#75afe9' : '#8F250C',
                         });
                         section.isSection = true;
                         section.boundary = b.name;
@@ -261,7 +261,7 @@ stage.on('mousedown', (e) => {
                 y: pos.y,
                 width: 1,
                 height: 1,
-                fill: 'red',
+                fill: '#D61A3C',
                 opacity: 0.5,
             });
             layer.add(heatingPreview);
