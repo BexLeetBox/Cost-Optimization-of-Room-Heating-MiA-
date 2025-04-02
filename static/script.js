@@ -85,7 +85,7 @@ function runSimulation() {
         .catch(error => {
             console.error('Error running simulation:', error);
             statusElement.innerText = "Error: Simulation failed.";
-            statusElement.style.color = "red";
+            statusElement.style.color = "#D61A3C";
             spinner.style.display = "none"; // Hide spinner
         });
 }
@@ -175,7 +175,7 @@ function defineRoom() {
             y: b.y,
             width: b.width,
             height: b.height,
-            fill: 'gray',
+            fill: '#454547',
             name: b.name,
             draggable: false,
         });
@@ -200,7 +200,7 @@ function defineRoom() {
                             y: b.y,
                             width: width,
                             height: b.height,
-                            fill: mode === 'Window' ? 'lightblue' : 'brown',
+                            fill: mode === 'Window' ? '#75afe9' : '#BE5E2B',
                         });
                         section.isSection = true;
                         section.boundary = b.name;
@@ -223,7 +223,7 @@ function defineRoom() {
                             x: b.x,
                             width: b.width,
                             height: height,
-                            fill: mode === 'Window' ? 'lightblue' : 'brown',
+                            fill: mode === 'Window' ? '#75afe9' : '#BE5E2B',
                         });
                         section.isSection = true;
                         section.boundary = b.name;
@@ -261,7 +261,7 @@ stage.on('mousedown', (e) => {
                 y: pos.y,
                 width: 1,
                 height: 1,
-                fill: 'red',
+                fill: '#D61A3C',
                 opacity: 0.5,
             });
             layer.add(heatingPreview);
@@ -339,23 +339,23 @@ function exportToJson() {
                 if (b.name === 'Top' || b.name === 'Bottom') {
                     return {
                         type: s.type,
-                        x1: s.x-50,
-                        x2: (s.x + s.width)-50,
+                        x1: (s.x-50)/100,
+                        x2: ((s.x + s.width)-50)/100,
                     };
                 } else {
                     return {
                         type: s.type,
-                        y1: -(s.y + s.height-50)+roomHeight*100,
-                        y2: -(s.y-50)+roomHeight*100,
+                        y1: (-(s.y + s.height-50)+roomHeight*100)/100,
+                        y2: (-(s.y-50)+roomHeight*100)/100,
                     };
                 }
             })
         })),
         heatingElements: heatingElements.map((h) => ({
-            x1: Math.min((h.x()-50),(h.x() + h.width()-50)),
-            x2: Math.max((h.x()-50),(h.x() + h.width()-50)),
-            y1: Math.min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100)),
-            y2: Math.max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))
+            x1: Math.min((h.x()-50),(h.x() + h.width()-50))/100,
+            x2: Math.max((h.x()-50),(h.x() + h.width()-50))/100,
+            y1: Math.min((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))/100,
+            y2: Math.max((-(h.y() + h.height()-50)+roomHeight*100),(-(h.y()-50)+roomHeight*100))/100
         }))
     };
 
