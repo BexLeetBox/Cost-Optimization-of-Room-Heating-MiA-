@@ -61,7 +61,7 @@ def fetch_weather_data(lat, lon):
     weather_records = []
     for entry in weather_data["properties"]["timeseries"]:
         time = pd.to_datetime(entry["time"]).tz_convert(NORWAY_TZ)
-        temperature = entry["data"]["instant"]["details"].get("air_temperature", None)
+        temperature = entry["data"]["instant"]["details"].get("air_temperature", None)-273.15
         weather_records.append({"time": time, "air_temperature": temperature})
     
     return weather_records, None
