@@ -330,8 +330,8 @@ function exportToJson() {
         room: {
             width: roomWidth*100,
             height: roomHeight*100,
-            tempStart: tempStart,
-            tempTarget: tempTarget
+            tempStart: tempStart+273.15,
+            tempTarget: tempTarget+273.15
         },
         boundaries: boundaries.map((b) => ({
             name: b.name,
