@@ -21,3 +21,30 @@ function get_price_temp(json_file)
     return price_EUR, price_NOK, T_out, hour_lst
     
 end
+
+
+function get_price_function(price_NOK, tF,σ=0.00001)
+    time = LinRange(0, tF, length(price_NOK))  # Lager tidsintervall
+    
+    return function (t)
+        for i in 1:length(time)-1
+            if t >= time[i] && t < time[i+1]
+                return price_NOK[i]*σ
+            end
+        end
+        return price_NOK[end]*σ  # Returnerer siste verdi hvis t er større enn siste tidsverdi
+    end
+end
+
+function get_temp_function(temp, tF)
+    time = LinRange(0, tF, length(temp))  # Lager tidsintervall
+    
+    return function (t)
+        for i in 1:length(time)-1
+            if t >= time[i] && t < time[i+1]
+                return temp[i]
+            end
+        end
+        return temp[end]  # Returnerer siste verdi hvis t er større enn siste tidsverdi
+    end
+end

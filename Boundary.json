@@ -1,0 +1,58 @@
+{
+  "room": {
+    "width": 5,
+    "height": 3,
+    "tempStart": 283.15,
+    "tempTarget": 293.15
+  },
+  "boundaries": [
+    {
+      "name": "Top",
+      "sections": [
+        {
+          "type": "Door",
+          "x1": 0.235,
+          "x2": 0.655
+        }
+      ]
+    },
+    {
+      "name": "Bottom",
+      "sections": []
+    },
+    {
+      "name": "Left",
+      "sections": [
+        {
+          "type": "Window",
+          "y1": 0.75125,
+          "y2": 2.32125
+        }
+      ]
+    },
+    {
+      "name": "Right",
+      "sections": [
+        {
+          "type": "Window",
+          "y1": 0.73125,
+          "y2": 2.32125
+        }
+      ]
+    }
+  ],
+  "heatingElements": [
+    {
+      "x1": 2.005,
+      "x2": 3.435,
+      "y1": 0.12125,
+      "y2": 0.20125
+    },
+    {
+      "x1": 1.765,
+      "x2": 3.215,
+      "y1": 2.82125,
+      "y2": 2.89125
+    }
+  ]
+}

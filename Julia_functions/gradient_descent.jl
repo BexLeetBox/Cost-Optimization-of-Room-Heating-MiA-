@@ -53,7 +53,7 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			# s = s_min(q,y,p,fgrad;solveSE=solveSE, solveAE=solveAE, spaces=spaces, w=w, dΩ=dΩ, dΓ=dΓ, Δt=Δt, t0=t0, tF=tF)
 			# println("step $k, s_min = $s")
 	
-			q_new = [(t,interpolate_everywhere((qfun(t) - 0.00001*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> Proj #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
+			q_new = [(t,interpolate_everywhere((qfun(t) - 0.00001*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] #|> Proj #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
 			# q_new = [(t,interpolate_everywhere((qfun(t) - 0.0001*grad), Qspace(t))) for (t,grad) in fgrad] #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
 	
 			qfunnew=t->find(q_new,t)
@@ -66,7 +66,7 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			L2fgrad = L2fgrad_save
 			α = α_0
 			while α > α_min
-				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> proj    # Compute tentative new control function defined by current line search parameter
+				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> P    # Compute tentative new control function defined by current line search parameter
 				qfunnew=t->find(q_new,t)
 
 				T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
