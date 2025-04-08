@@ -149,17 +149,6 @@ def download_msh():
 
     return send_file(msh_file_path, as_attachment=True)
 
-@app.route('/run-simulation', methods=['GET'])
-def run_simulation():
-    """Runs the OpenModelica heat conduction simulation."""
-    script_path = os.path.join(os.getcwd(), "run_simulation.py")
-    result = subprocess.run(["python", script_path], capture_output=True, text=True)
-
-    if result.returncode == 0:
-        return jsonify({"status": "success", "message": "Simulation completed!"})
-    else:
-        return jsonify({"status": "error", "message": result.stderr}), 500
-
 
 
 if __name__ == '__main__':
