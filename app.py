@@ -27,14 +27,17 @@ def home():
 def convert_to_norway_time(timestamp):
     """Convert UTC time to Norway time (CET/CEST)."""
     return pd.to_datetime(timestamp).tz_convert(NORWAY_TZ)
-
+@app.route('/energy-prices', methods=['GET'])
 def fetch_energy_prices(region_code):
     """Fetches energy prices for the current day and converts time to Norway timezone."""
     # Get today's date in Norway timezone
     now = datetime.now(pytz.timezone("Europe/Oslo"))
     today_str = now.strftime("%Y/%m-%d")  # Format as YYYY/MM-DD
 
+    region_code = request.args.get('region_code', 'NO5')  # Default to NO5 if not provided
+
     # Update API URL with today's date and region code
+    #url = f"https://www.hvakosterstrommen.no/api/v1/prices/{today_str}_{region_code}.json"
     url = f"https://www.hvakosterstrommen.no/api/v1/prices/{today_str}_{region_code}.json"
 
     response = requests.get(url)
@@ -48,6 +51,8 @@ def fetch_energy_prices(region_code):
     return energy_data, None
 
 
+
+@app.route('/weather-data', methods=['GET'])
 def fetch_weather_data(lat, lon):
     """Fetches weather data and converts time to Norway timezone."""
     url = f"https://api.met.no/weatherapi/locationforecast/2.0/compact?lat={lat}&lon={lon}"
@@ -89,14 +94,11 @@ def get_merged_data():
     df_energy = pd.DataFrame(energy_data)
     df_weather = pd.DataFrame(weather_data)
 
-
     
     # Merge on time
     df_merged = pd.merge(df_energy, df_weather, left_on="time_start", right_on="time", how="inner")
-    
     # Convert back to JSON
     merged_data = df_merged[["time_start", "NOK_per_kWh", "EUR_per_kWh", "air_temperature"]].to_dict(orient="records")
-    
     return jsonify(merged_data)
 
 
@@ -165,6 +167,7 @@ def run_simulation():
             return jsonify({"error": "results.pvd not found after simulation"}), 500
     except subprocess.CalledProcessError as e:
         return jsonify({"error": e.stderr}), 500
+
 
 
 if __name__ == '__main__':
