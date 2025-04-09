@@ -97,6 +97,7 @@ button:hover {
     max-width: 50vw; /* Limit width */
     border-radius: 8px; /* Rounded corners */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+    overflow: hidden;
 }
 
 /*

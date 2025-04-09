@@ -37,7 +37,6 @@ def fetch_energy_prices(region_code):
     # Update API URL with today's date and region code
     url = f"https://www.hvakosterstrommen.no/api/v1/prices/{today_str}_{region_code}.json"
 
-    print(region_code)
     response = requests.get(url)
     if response.status_code != 200:
         return None, {"error": f"Failed to retrieve energy prices for {today_str} in region {region_code}"}
@@ -149,6 +148,23 @@ def download_msh():
 
     return send_file(msh_file_path, as_attachment=True)
 
+@app.route('/run-simulation', methods=['POST'])
+def run_simulation():
+    try:
+        result = subprocess.run(["julia", "main3.jl"], check=True, capture_output=True, text=True)
+
+        # You can optionally read outputs from a summary file or hardcoded result
+        output_path = "results.pvd"
+        if os.path.exists(output_path):
+            return jsonify({
+                "status": "success",
+                "message": "Simulation completed.",
+                "output": output_path
+            })
+        else:
+            return jsonify({"error": "results.pvd not found after simulation"}), 500
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": e.stderr}), 500
 
 
 if __name__ == '__main__':

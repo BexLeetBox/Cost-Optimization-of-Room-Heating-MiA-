@@ -72,10 +72,10 @@
         <input type="number" id="roomHeight" value="3">
         <label for="roomHeight">Current room temperature (°C): </label>
         <input type="number" id="startTemp" value="10">
-        <label for="roomHeight">Target temperature (°C): </label>
+        <label for="targetTemp">Target temperature (°C): </label>
         <input type="number" id="targetTemp" value="20">
-        <label for="roomHeight">Heater power rating (kWh): </label>
-        <input type="number" id="targetTemp" value="2000">
+        <label for="heaterPower">Heater power rating (kWh): </label>
+        <input type="number" id="heaterPower" value="2000">
         <button onclick="defineRoom()">Define Room</button>
     </div>
 
@@ -106,9 +106,10 @@
         <div id="container"></div>
     </div>
 
-    <!-- Move the Export to JSON button here -->
+
     <div class="section">
-        <button id="exportBtn">Export to JSON</button>
+        <button type="button" id="runSimulation" onclick="exportToJson(); runSimulation();">Run Simulation</button>
+        <pre id="simulation-status"></pre>
     </div>
 
     <script src="../static/script.js"></script>

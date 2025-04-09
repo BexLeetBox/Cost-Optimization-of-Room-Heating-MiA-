@@ -67,30 +67,23 @@ function toggleDisplay(elementId) {
 }
 
 function runSimulation() {
-    const statusElement = document.getElementById('status');
-    const spinner = document.getElementById('loading-spinner');
+    document.getElementById("simulation-status").textContent = "Running simulation...";
 
-    // Show loading text and spinner
-    statusElement.innerText = "Running simulation... Please wait.";
-    statusElement.style.color = "blue";
-    spinner.style.display = "block";
-
-    fetch('/run-simulation')
-        .then(response => response.json())
-        .then(data => {
-            statusElement.innerText = data.message;
-            statusElement.style.color = "green";
-            spinner.style.display = "none"; // Hide spinner
-        })
-        .catch(error => {
-            console.error('Error running simulation:', error);
-            statusElement.innerText = "Error: Simulation failed.";
-            statusElement.style.color = "#D61A3C";
-            spinner.style.display = "none"; // Hide spinner
-        });
+    fetch("/run-simulation", {
+        method: "POST",
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            document.getElementById("simulation-status").textContent = "Simulation complete. Result file: " + data.output;
+        } else {
+            document.getElementById("simulation-status").textContent = "Error: " + data.error;
+        }
+    })
+    .catch(err => {
+        document.getElementById("simulation-status").textContent = "Unexpected error: " + err;
+    });
 }
-
-
 
 /**
  
@@ -363,8 +356,6 @@ function exportToJson() {
 }
 
 
-
-document.getElementById('exportBtn').addEventListener('click', exportToJson);
 
 
 const radioButtons = document.querySelectorAll('input[name="mode"]');
