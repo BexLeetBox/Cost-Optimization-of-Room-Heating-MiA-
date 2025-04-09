@@ -17,8 +17,14 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 	ls = LUSolver()
 	θ = 0.5
 	solver = ThetaMethod(ls, Δt, θ)
+	
+	if typeof(Q) == Vector{Tuple{Float64, SingleFieldFEFunction{GenericCellField{ReferenceDomain}}}}
+		q = Q
+	else
+		q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]
+	end
 
-	q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]    # Initialize u with some random values and apply projection
+	# q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]    # Initialize u with some random values and apply projection
 	qfun(t)=find(q,t)
 
 	T, cacheSE, A_SE = SEsolver(solver, Qt, Trialspace, Testspace; dΩ, dΓ, Tout, constants)  # initial SE solve
@@ -57,24 +63,26 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			# q_new = [(t,interpolate_everywhere((qfun(t) - 0.0001*grad), Qspace(t))) for (t,grad) in fgrad] #interpolate_everywhere(q - s*fgrad,Qspace) |> P			# in most cases interpolate instead of interpolate_everywhere works as well
 	
 			qfunnew=t->find(q_new,t)
-			T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
+			T_new, cacheSE = solveSE(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 			#y_new = FEFunction(Trialspace, y_dof)	
 			cost_new = J(T_new,q_new)	
 		else
 			ρ, α_0, α_min, σ = armijoparas
 			cost_new = cost
-			L2fgrad = L2fgrad_save
+			L2fgrad = L2norm(fgrad)
 			α = α_0
 			while α > α_min
 				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> P    # Compute tentative new control function defined by current line search parameter
 				qfunnew=t->find(q_new,t)
 
-				T_new, cacheSE = SEsolver(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
+				T_new, cacheSE = solveSE(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 				
+				interm = σ*α*L2fgrad^2
+
 				#y_new = FEFunction(Trialspace, y_dof)
-				println("α = $α, new_cost = $cost_new")
+				println("α = $α, new_cost = $cost_new, L2fgrad = $L2fgrad, interm = $interm")
 				cost_new = J(T_new, q_new)                                  # Compare decrease in functional and accept if sufficient
-				if cost_new < cost #- σ*α*L2fgrad^2
+				if cost_new < cost - σ*α*L2fgrad^2
 					break
 				else
 					α *= ρ

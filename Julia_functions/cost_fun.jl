@@ -11,7 +11,7 @@ end
 
 
 ∇e(Q::Vector{Tuple{Float64, SingleFieldFEFunction{GenericCellField{ReferenceDomain}}}},
-T, W) = [(Q[k][1],2*price(T[k][1])^2*Q[k][2]-ρ*W[k][2]*c) for k=1:length(Q)]                                                # gradient of reduced cost
+T, W) = [(Q[k][1],2*price(T[k][1])^2*Q[k][2]-W[k][2]) for k=1:length(Q)]                                                # gradient of reduced cost
 
 function ∇e(Qt::Function,
 T::Vector{Tuple{Float64, SingleFieldFEFunction{GenericCellField{ReferenceDomain}}}},
