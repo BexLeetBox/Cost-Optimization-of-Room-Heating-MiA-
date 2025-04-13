@@ -27,7 +27,7 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 	# q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]    # Initialize u with some random values and apply projection
 	qfun(t)=find(q,t)
 
-	T, cacheSE, A_SE = SEsolver(solver, Qt, Trialspace, Testspace; dΩ, dΓ, Tout, constants)  # initial SE solve
+	T, cacheSE, A_SE = SEsolver(solver, qfun, Trialspace, Testspace; dΩ, dΓ, Tout, constants)  # initial SE solve
 	
 	Tfun(t)=find(T,t)
 	println("T computed")
@@ -80,8 +80,9 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 				interm = σ*α*L2fgrad^2
 
 				#y_new = FEFunction(Trialspace, y_dof)
-				println("α = $α, new_cost = $cost_new, L2fgrad = $L2fgrad, interm = $interm")
 				cost_new = J(T_new, q_new)                                  # Compare decrease in functional and accept if sufficient
+				println("α = $α, new_cost = $cost_new, L2fgrad = $L2fgrad, interm = $interm")
+
 				if cost_new < cost - σ*α*L2fgrad^2
 					break
 				else
