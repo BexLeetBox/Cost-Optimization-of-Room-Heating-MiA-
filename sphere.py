@@ -70,7 +70,7 @@ async def animation_loop():
         print(f"Time {t:.2f} -> updating view")
         UpdatePipeline(time=t, proxy=pvd_reader)
         render_view.ViewTime = t
-        display.RescaleTransferFunctionToDataRange(False, False)
+        display.RescaleTransferFunctionToDataRange(True, True)
         render_view.StillRender()  # ✅ Force re-render
 
 
