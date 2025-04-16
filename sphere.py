@@ -4,6 +4,7 @@ from trame.app import get_server
 from trame.ui.vuetify import SinglePageLayout
 from trame.widgets import paraview as pv, vuetify
 import asyncio
+from paraview.simple import servermanager
 
 # -----------------------------------------------------------------------------
 # Trame server setup
@@ -64,13 +65,18 @@ async def animation_loop():
     if not pvd_reader.TimestepValues:
         return
 
-
     animation_scene.GoToFirst()
     for t in pvd_reader.TimestepValues:
+        print(f"Time {t:.2f} -> updating view")
         UpdatePipeline(time=t, proxy=pvd_reader)
         render_view.ViewTime = t
+        display.RescaleTransferFunctionToDataRange(False, False)
+        render_view.StillRender()  # ✅ Force re-render
+
+
         ctrl.view_update()
         await asyncio.sleep(0.1)
+
 
 
 @ctrl.add("on_server_ready")
