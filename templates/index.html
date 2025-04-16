@@ -65,19 +65,32 @@
     -->
 
 
-    <div class="section">
-        <label for="roomWidth">Room Width (m): </label>
+    <div class="section" id="roomConfig">
+    <div class="form-row">
+        <label for="roomWidth">Room Width (m):</label>
         <input type="number" id="roomWidth" value="5">
-        <label for="roomHeight">Room Height (m): </label>
-        <input type="number" id="roomHeight" value="3">
-        <label for="roomHeight">Current room temperature (°C): </label>
-        <input type="number" id="startTemp" value="10">
-        <label for="targetTemp">Target temperature (°C): </label>
-        <input type="number" id="targetTemp" value="20">
-        <label for="heaterPower">Heater power rating (kWh): </label>
-        <input type="number" id="heaterPower" value="2000">
-        <button onclick="defineRoom()">Define Room</button>
     </div>
+    <div class="form-row">
+        <label for="roomHeight">Room Height (m):</label>
+        <input type="number" id="roomHeight" value="3">
+    </div>
+    <div class="form-row">
+        <label for="startTemp">Current room temperature (°C):</label>
+        <input type="number" id="startTemp" value="10">
+    </div>
+    <div class="form-row">
+        <label for="targetTemp">Target temperature (°C):</label>
+        <input type="number" id="targetTemp" value="20">
+    </div>
+    <div class="form-row">
+        <label for="heaterPower">Heater power rating (kWh):</label>
+        <input type="number" id="heaterPower" value="2000">
+    </div>
+    <div class="button-row">
+        <button id="defineRoom" onclick="defineRoom()">Define Room</button>
+    </div>
+</div>
+
 
     
 

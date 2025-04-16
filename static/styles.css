@@ -244,6 +244,54 @@ RADIO
     background-color: #0056b3; /* Darker blue on hover */
 }
 
+#roomConfig {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.form-row label {
+width: 200px;
+    text-align: right;
+    padding-right: 10px;
+    flex-shrink: 0;
+}
+
+.form-row input {
+    width: 300px;
+    flex: 1;
+}
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
 
 
+/**
 
+#roomConfig{
+
+    display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px 20px;
+  margin: 0 auto;
+}
+
+#defineRoom{
+    display: grid;
+    grid-column: span 2;
+    text-align: center;
+
+}
+
+*/
