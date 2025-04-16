@@ -50,10 +50,24 @@ function fetchMergedData() {
   fetch(`/merged-data?lat=${lat}&lon=${lon}&region_code=${regionCode}`)
     .then((response) => response.json())
     .then((data) => {
-      const display = document.getElementById("merged-data");
-      display.textContent = JSON.stringify(data, null, 2);
-      display.style.display = "block";
-    })
+  const display = document.getElementById("merged-data");
+  display.innerHTML = ""; // Clear previous content
+
+  data.forEach((entry) => {
+    const card = document.createElement("div");
+    card.className = "data-card";
+    card.innerHTML = `
+      <div><strong>Time:</strong> ${new Date(entry.time_start).toLocaleString()}</div>
+      <div><strong>Temperature:</strong> ${entry.air_temperature.toFixed(2)} K</div>
+      <div><strong>EUR/kWh:</strong> €${entry.EUR_per_kWh.toFixed(4)}</div>
+      <div><strong>NOK/kWh:</strong> ${entry.NOK_per_kWh.toFixed(4)} kr</div>
+    `;
+    display.appendChild(card);
+  });
+
+  display.style.display = "block";
+})
+
     .catch((error) => console.error("Error fetching merged data:", error));
 }
 
