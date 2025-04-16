@@ -277,21 +277,31 @@ width: 200px;
 }
 
 
-/**
-
-#roomConfig{
-
-    display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 10px 20px;
-  margin: 0 auto;
-}
-
-#defineRoom{
-    display: grid;
-    grid-column: span 2;
+.radio-container label {
+    display: inline-block;
+    min-width: 140px; /* consistent width */
     text-align: center;
-
+    padding: 10px 20px;
+    border: 2px solid #007BFF;
+    border-radius: 6px;
+    background-color: white;
+    color: #007BFF;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
 }
 
-*/
+.radio-container input[type="radio"]:checked + label {
+    background-color: #007BFF;
+    color: white;
+    font-weight: bold;
+    border-color: #0056b3;
+}
+
+.radio-container label:hover {
+    background-color: #e6f0ff;
+    color: #0056b3;
+    border-color: #0056b3;
+}
+
