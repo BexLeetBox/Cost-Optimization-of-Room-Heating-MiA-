@@ -96,10 +96,6 @@ def reset_camera():
     """Reset the camera to its initial position."""
     render_view.ResetCamera()
 
-@ctrl.add("reset_view")
-def reset_view():
-    """Zoom to the data."""
-    render_view.ResetCamera()
 
 def reset_time():
     global animation_task
@@ -128,7 +124,6 @@ with SinglePageLayout(server) as layout:
         with vuetify.VNavigationDrawer(app=True, permanent=True, width="180"):
             vuetify.VListItemTitle("Controls")
             vuetify.VBtn(text=True, click=ctrl.reset_camera, children=["Reset Camera"])
-            vuetify.VBtn(text=True, click=ctrl.reset_view, children=["Zoom to Data"])
             vuetify.VBtn(text=True, click=reset_time, children=["Reset Time"])
             vuetify.VBtn(
                 text=True,
