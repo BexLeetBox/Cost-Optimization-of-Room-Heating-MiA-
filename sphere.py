@@ -11,6 +11,7 @@ from paraview.simple import servermanager
 # -----------------------------------------------------------------------------
 server = get_server(client_type="vue2")
 state, ctrl = server.state, server.controller
+animation_task = None
 
 # Initialize custom states if desired
 state.playing = False
@@ -67,22 +68,27 @@ async def animation_loop():
 
     animation_scene.GoToFirst()
     for t in pvd_reader.TimestepValues:
+        if not state.playing:
+            break  # Stop if animation is paused
         print(f"Time {t:.2f} -> updating view")
         UpdatePipeline(time=t, proxy=pvd_reader)
         render_view.ViewTime = t
         display.RescaleTransferFunctionToDataRange(True, True)
-        render_view.StillRender()  # ✅ Force re-render
-
-
+        render_view.StillRender()
         ctrl.view_update()
         await asyncio.sleep(0.1)
 
 
-
 @ctrl.add("on_server_ready")
-def start_animation(**kwargs):  # ✅ Accept unknown keyword args
-    asyncio.create_task(animation_loop())
+def start_animation(**kwargs):
+    global animation_task
+    state.playing = True
 
+    # If an animation is already running, cancel it first
+    if animation_task and not animation_task.done():
+        animation_task.cancel()
+
+    animation_task = asyncio.create_task(animation_loop())
 
 
 @ctrl.add("reset_camera")
@@ -96,12 +102,20 @@ def reset_view():
     render_view.ResetCamera()
 
 def reset_time():
-    """Set time slider (and render view) back to the first timestep."""
+    global animation_task
+    state.playing = False
+
+    if animation_task and not animation_task.done():
+        animation_task.cancel()
+
     if pvd_reader.TimestepValues:
         state.time = 0
         render_view.ViewTime = pvd_reader.TimestepValues[0]
+        UpdatePipeline(time=pvd_reader.TimestepValues[0], proxy=pvd_reader)
+        render_view.StillRender()
+        ctrl.view_update()
         update_view()
-    return None  # Ensure nothing non-serializable is returned
+
 
 # -----------------------------------------------------------------------------
 # Trame GUI layout
@@ -118,6 +132,7 @@ with SinglePageLayout(server) as layout:
             vuetify.VBtn(text=True, click=reset_time, children=["Reset Time"])
             vuetify.VBtn(
                 text=True,
+                click=start_animation,
                 children=[vuetify.VIcon("mdi-play")]
             )
 
