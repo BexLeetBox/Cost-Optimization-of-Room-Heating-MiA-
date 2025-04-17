@@ -52,7 +52,7 @@ function fetchMergedData() {
     .then((data) => {
   const display = document.getElementById("merged-data");
   display.innerHTML = ""; // Clear previous content
-
+  window.weatherEnergyData = data;
   data.forEach((entry) => {
     const card = document.createElement("div");
     card.className = "data-card";
@@ -92,7 +92,10 @@ function runSimulation() {
     fetch("/run-simulation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boundary: boundaryData })
+        body: JSON.stringify({
+            boundary: boundaryData,
+            weatherEnergy: window.weatherEnergyData || null
+        })
             })
     .then(res => res.json())
     .then(data => {

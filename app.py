@@ -151,17 +151,23 @@ def download_msh():
 
     return send_file(msh_file_path, as_attachment=True)
 
-@app.route('/run-simulation', methods=['POST'])
+@ app.route('/run-simulation', methods=['POST'])
 def run_simulation():
-    # 1️⃣  Persist Boundary.json
+    import json                                   # already imported earlier
+    # 1️⃣  Persist Boundary.json  (unchanged)
     boundary_data = request.json.get('boundary')
     if boundary_data is None:
         return jsonify({"error": "Boundary data missing"}), 400
-
-    with open("Boundary.json", "w") as f:          # overwrites if present
+    with open("Boundary.json", "w") as f:
         json.dump(boundary_data, f, indent=2)
 
-    # 2️⃣  Launch Julia
+    # 2️⃣  Persist WeatherandEnergy.json  (NEW)
+    weather_energy = request.json.get('weatherEnergy')
+    if weather_energy is not None:                # only write if supplied
+        with open("WeatherandEnergy.json", "w") as f:
+            json.dump(weather_energy, f, indent=2)
+
+    # 3️⃣  Launch Julia (unchanged)
     try:
         subprocess.run(["julia", "main3.jl"],
                         check=True, capture_output=True, text=True)
@@ -172,10 +178,7 @@ def run_simulation():
     if not os.path.exists(output_path):
         return jsonify({"error": "results.pvd not found after simulation"}), 500
 
-    return jsonify({
-        "status": "success",
-        "output": output_path
-    })
+    return jsonify({"status": "success", "output": output_path})
 
 
 
