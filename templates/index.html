@@ -45,7 +45,10 @@
         <input type="text" id="merged-latitude" placeholder="Enter Latitude">
         <input type="text" id="merged-longitude" placeholder="Enter Longitude">
         <button onclick="fetchMergedData()">Fetch Merged Data</button>
-        <button onclick="toggleDisplay('merged-data')">Toggle Display</button>
+        <button id="toggleArrow" onclick="toggleDisplay('merged-data')">
+  ▼ Show Data
+</button>
+
         <pre id="merged-data" style="display: none;"></pre>
     </div>
     <!--

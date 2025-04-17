@@ -321,7 +321,23 @@ width: 200px;
   background-color: #f9f9f9;
   border: 1px solid #ccc;
   font-family: monospace;
-    font-size: small;
+    font-size: large;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
+#merged-data {
+  transition: all 0.3s ease-in-out;
+}
+#toggleArrow {
+  background: none;
+  color: #007BFF;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+}
+
+#toggleArrow:hover {
+  color: #0056b3;
+}

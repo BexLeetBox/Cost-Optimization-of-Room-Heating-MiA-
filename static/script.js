@@ -71,14 +71,19 @@ function fetchMergedData() {
     .catch((error) => console.error("Error fetching merged data:", error));
 }
 
-function toggleDisplay(elementId) {
-  const element = document.getElementById(elementId);
-  if (element.style.display === "none") {
-    element.style.display = "block";
+function toggleDisplay(id) {
+  const section = document.getElementById(id);
+  const button = document.getElementById("toggleArrow");
+
+  if (section.style.display === "none" || section.style.display === "") {
+    section.style.display = "block";
+    button.innerHTML = "▲ Hide Data";
   } else {
-    element.style.display = "none";
+    section.style.display = "none";
+    button.innerHTML = "▼ Show Data";
   }
 }
+
 
 function runSimulation() {
     document.getElementById("simulation-status").textContent = "Running simulation...";
