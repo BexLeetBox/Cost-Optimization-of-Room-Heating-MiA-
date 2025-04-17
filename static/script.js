@@ -87,10 +87,13 @@ function toggleDisplay(id) {
 
 function runSimulation() {
     document.getElementById("simulation-status").textContent = "Running simulation...";
+    const boundaryData = exportToJson();
 
     fetch("/run-simulation", {
         method: "POST",
-    })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ boundary: boundaryData })
+            })
     .then(res => res.json())
     .then(data => {
         if (data.status === "success") {
@@ -337,13 +340,15 @@ function exportToJson() {
     const roomHeight = parseFloat(document.getElementById('roomHeight').value);
     const tempStart = parseFloat(document.getElementById('startTemp').value);
     const tempTarget = parseFloat(document.getElementById('targetTemp').value);
+    const heaterPower = parseFloat(document.getElementById('heaterPower').value);
 
     const roomData = {
         room: {
             width: roomWidth*100,
             height: roomHeight*100,
             tempStart: tempStart+273.15,
-            tempTarget: tempTarget+273.15
+            tempTarget: tempTarget+273.15,
+            heaterPower: heaterPower
         },
         boundaries: boundaries.map((b) => ({
             name: b.name,
@@ -372,6 +377,7 @@ function exportToJson() {
     };
 
     console.log(JSON.stringify(roomData, null, 2));
+    return roomData;
 }
 
 

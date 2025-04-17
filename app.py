@@ -6,6 +6,7 @@ import pandas as pd
 from datetime import datetime
 import subprocess
 import os
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -152,21 +153,30 @@ def download_msh():
 
 @app.route('/run-simulation', methods=['POST'])
 def run_simulation():
-    try:
-        result = subprocess.run(["julia", "main3.jl"], check=True, capture_output=True, text=True)
+    # 1️⃣  Persist Boundary.json
+    boundary_data = request.json.get('boundary')
+    if boundary_data is None:
+        return jsonify({"error": "Boundary data missing"}), 400
 
-        # You can optionally read outputs from a summary file or hardcoded result
-        output_path = "results.pvd"
-        if os.path.exists(output_path):
-            return jsonify({
-                "status": "success",
-                "message": "Simulation completed.",
-                "output": output_path
-            })
-        else:
-            return jsonify({"error": "results.pvd not found after simulation"}), 500
+    with open("Boundary.json", "w") as f:          # overwrites if present
+        json.dump(boundary_data, f, indent=2)
+
+    # 2️⃣  Launch Julia
+    try:
+        subprocess.run(["julia", "main3.jl"],
+                        check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         return jsonify({"error": e.stderr}), 500
+
+    output_path = "results.pvd"
+    if not os.path.exists(output_path):
+        return jsonify({"error": "results.pvd not found after simulation"}), 500
+
+    return jsonify({
+        "status": "success",
+        "output": output_path
+    })
+
 
 
 
