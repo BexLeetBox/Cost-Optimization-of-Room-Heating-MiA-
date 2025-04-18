@@ -341,3 +341,8 @@ width: 200px;
 #toggleArrow:hover {
   color: #0056b3;
 }
+
+img {
+  max-width: 100%;
+  height: auto;
+}

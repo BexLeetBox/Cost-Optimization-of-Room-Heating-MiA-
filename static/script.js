@@ -86,29 +86,41 @@ function toggleDisplay(id) {
 
 
 function runSimulation() {
-    document.getElementById("simulation-status").textContent = "Running simulation...";
-    const boundaryData = exportToJson();
+    const boundaryData   = exportToJson();
+    const weatherEnergy  = window.weatherEnergyData || null;
+
+    document.getElementById("simulation-status").textContent = "Running simulation…";
 
     fetch("/run-simulation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            boundary: boundaryData,
-            weatherEnergy: window.weatherEnergyData || null
-        })
-            })
+        body: JSON.stringify({ boundary: boundaryData, weatherEnergy })
+    })
     .then(res => res.json())
     .then(data => {
         if (data.status === "success") {
-            document.getElementById("simulation-status").textContent = "Simulation complete. Result file: " + data.output;
+            // ⬇️  show the PNG the backend just saved
+            const plotSection = document.getElementById("plot-section");
+            const plotImg     = document.getElementById("result-plot");
+
+            // Cache‑buster querystring so the browser doesn’t keep an old image
+            plotImg.src = data.plot + "?t=" + Date.now();
+
+            plotSection.style.display = "block";
+
+            document.getElementById("simulation-status").textContent =
+                "Simulation complete. Result file: " + data.output;
         } else {
-            document.getElementById("simulation-status").textContent = "Error: " + data.error;
+            document.getElementById("simulation-status").textContent =
+                "Error: " + data.error;
         }
     })
     .catch(err => {
-        document.getElementById("simulation-status").textContent = "Unexpected error: " + err;
+        document.getElementById("simulation-status").textContent =
+            "Unexpected error: " + err;
     });
 }
+
 
 /**
  
@@ -347,8 +359,8 @@ function exportToJson() {
 
     const roomData = {
         room: {
-            width: roomWidth*100,
-            height: roomHeight*100,
+            width: roomWidth,
+            height: roomHeight,
             tempStart: tempStart+273.15,
             tempTarget: tempTarget+273.15,
             heaterPower: heaterPower
