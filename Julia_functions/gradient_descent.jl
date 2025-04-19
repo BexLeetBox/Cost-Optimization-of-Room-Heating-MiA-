@@ -23,9 +23,8 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 	else
 		q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]
 	end
-
-	# q = [(t,interpolate_everywhere(Q(t),Qspace(t))) for t=t0:Δt:tF]    # Initialize u with some random values and apply projection
 	qfun(t)=find(q,t)
+
 
 	T, cacheSE, A_SE = SEsolver(solver, qfun, Trialspace, Testspace; dΩ, dΓ, Tout, constants)  # initial SE solve
 	
@@ -33,23 +32,20 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 	println("T computed")
 
 	W, cacheAE, A_AE = solveAE(solver, Tfun,q,Trialspace,Testspace,dΩ=dΩ,dΓ=dΓ, Tfin=Tfin,tF=tF, constants=constants)      # initial AE solve
-	#p = FEFunction(Testspace, p_dof)
 	println("W computed")
 	
 	cost = J(T, q)
 	fgrad =  ∇f(q, T, W)														# Compute initial gradient
 	L2fgrad_save = L2norm(fgrad)                                       # Compute norm of initial gradient
 
+	costs=[cost]
 	if saveall
 		qs=[q]                     # save the solutions - only if really necessary
 		Ts=[T]
 		Ws=[W]
-		costs=[cost]
 	else
 		qs,Ts,Ws=[],[],[]
 	end
-
-
 	for k=1:iter_max
 		println("entered for loop, E=$cost, k = $k")
 		s_min = nothing
@@ -70,16 +66,15 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			ρ, α_0, α_min, σ = armijoparas
 			cost_new = cost
 			L2fgrad = L2norm(fgrad)
-			α = α_0
+			α = α_0 			
 			while α > α_min
 				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> P    # Compute tentative new control function defined by current line search parameter
-				qfunnew=t->find(q_new,t)
-
-				T_new, cacheSE = solveSE(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 				
+				# q_new = [(q[kk][1],interpolate_everywhere((q[kk][2] - α*(price(q[kk][1])-W[kk][2]))*q_pos, Qspace(q[kk][1]))) for kk=1:length(q)] |> P    # Compute tentative new control function defined by current line search parameter
+				
+				qfunnew=t->find(q_new,t)
+				T_new, cacheSE = solveSE(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 				interm = σ*α*L2fgrad^2
-
-				#y_new = FEFunction(Trialspace, y_dof)
 				cost_new = J(T_new, q_new)                                  # Compare decrease in functional and accept if sufficient
 				println("α = $α, new_cost = $cost_new, L2fgrad = $L2fgrad, interm = $interm")
 
@@ -94,17 +89,15 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 				break
 			end
 		end
-		# println("α = $α")
 
 		q = q_new
 		T = T_new
 		qfun = qfunnew
 		cost = cost_new
-		
+		push!(costs,cost)
 		if saveall
 			push!(qs,q)
 			push!(Ts,T)
-			push!(costs,cost)
 			push!(Ws,W)
 		end
 		Tfun=t->find(T,t)
@@ -119,5 +112,5 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 		end
 	
 	end
-	return saveall ? (Ts,qs,Ws,costs) : (T,q,W,cost)                    	# give back either all saved variables or only end result
+	return saveall ? (Ts,qs,Ws,costs) : (T,q,W,costs)                    	# give back either all saved variables or only end result
 end

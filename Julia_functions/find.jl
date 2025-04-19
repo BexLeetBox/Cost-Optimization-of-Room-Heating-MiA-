@@ -17,3 +17,25 @@ function find(y,s)
 		tsave,ysave = t,yy
 	end
 end
+# function find(y, s)
+# 	# y: vector of (t, value)
+# 	# s: time to evaluate at
+# 	# Δt: time step
+# 	# Uspace: function mapping t -> finite element space
+
+# 	prev_t, prev_val = nothing, nothing
+
+# 	for (t, val) in y
+# 		if isapprox(t, s; atol=1e-10)
+# 			return val
+# 		elseif t > s && prev_t !== nothing
+# 			# linear interpolation
+# 			interp_val = ((s - prev_t)*val + (t - s)*prev_val)/Δt
+# 			return interpolate_everywhere(interp_val, Uspace(s))
+# 		end
+# 		prev_t, prev_val = t, val
+# 	end
+
+# 	# If s is beyond last time, return final value
+# 	return last(y)[2]
+# end

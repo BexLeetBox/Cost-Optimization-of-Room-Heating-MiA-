@@ -1,0 +1,74 @@
+[
+  {
+    "EUR_per_kWh": 0.01669,
+    "NOK_per_kWh": 0.19048,
+    "air_temperature": 282.15,
+    "time_start": "Wed, 02 Apr 2025 10:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01319,
+    "NOK_per_kWh": 0.15054,
+    "air_temperature": 282.34999999999997,
+    "time_start": "Wed, 02 Apr 2025 11:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.00967,
+    "NOK_per_kWh": 0.11036,
+    "air_temperature": 282.25,
+    "time_start": "Wed, 02 Apr 2025 12:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01037,
+    "NOK_per_kWh": 0.11835,
+    "air_temperature": 282.34999999999997,
+    "time_start": "Wed, 02 Apr 2025 13:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.02006,
+    "NOK_per_kWh": 0.22894,
+    "air_temperature": 282.15,
+    "time_start": "Wed, 02 Apr 2025 14:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.02314,
+    "NOK_per_kWh": 0.2641,
+    "air_temperature": 281.45,
+    "time_start": "Wed, 02 Apr 2025 15:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01764,
+    "NOK_per_kWh": 0.20133,
+    "air_temperature": 280.65,
+    "time_start": "Wed, 02 Apr 2025 16:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01828,
+    "NOK_per_kWh": 0.20863,
+    "air_temperature": 280.84999999999997,
+    "time_start": "Wed, 02 Apr 2025 17:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01869,
+    "NOK_per_kWh": 0.21331,
+    "air_temperature": 280.75,
+    "time_start": "Wed, 02 Apr 2025 18:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01863,
+    "NOK_per_kWh": 0.21262,
+    "air_temperature": 280.45,
+    "time_start": "Wed, 02 Apr 2025 19:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01817,
+    "NOK_per_kWh": 0.20737,
+    "air_temperature": 280.25,
+    "time_start": "Wed, 02 Apr 2025 20:00:00 GMT"
+  },
+  {
+    "EUR_per_kWh": 0.01777,
+    "NOK_per_kWh": 0.20281,
+    "air_temperature": 279.95,
+    "time_start": "Wed, 02 Apr 2025 21:00:00 GMT"
+  }
+]
