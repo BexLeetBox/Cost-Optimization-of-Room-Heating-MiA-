@@ -15,7 +15,7 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 	Trialspace, Testspace, Qspace = spaces                                  # Extract spaces
 	
 	ls = LUSolver()
-	θ = 0.5
+	θ = 1
 	solver = ThetaMethod(ls, Δt, θ)
 	
 	if typeof(Q) == Vector{Tuple{Float64, SingleFieldFEFunction{GenericCellField{ReferenceDomain}}}}
