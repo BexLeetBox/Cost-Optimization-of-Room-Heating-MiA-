@@ -169,7 +169,7 @@ def run_simulation():
 
     # 3️⃣  Launch Julia (unchanged)
     try:
-        subprocess.run(["julia", "main3.jl"],
+        subprocess.run(["julia", "main3beka.jl"],
                         check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         return jsonify({"error": e.stderr}), 500

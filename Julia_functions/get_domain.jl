@@ -5,6 +5,9 @@ function get_room(json_file)
     # Hent ut høyde og bredde
     width = data["room"]["width"]
     height = data["room"]["height"]
+    Tini = data["room"]["tempStart"]
+    Tfin = data["room"]["tempTarget"]
+
 
     # Hent ut alle vindus- og dørkoordinater
     windows = []
@@ -33,7 +36,7 @@ function get_room(json_file)
     # Hent oppvarmingselementer
     heating_elem = [[elem["x1"], elem["x2"], elem["y1"], elem["y2"]] for elem in data["heatingElements"]]
 
-    return width, height, windows, doors, heating_elem
+    return width, height, Tini, Tfin, windows, doors, heating_elem
 end
 
 
