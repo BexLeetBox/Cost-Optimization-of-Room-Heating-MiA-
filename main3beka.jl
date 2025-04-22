@@ -209,12 +209,12 @@ uh  = Ts3[2:end]
 
 #### Generate and save plots
 c1_real = plot_costs2(costs3)
-CairoMakie.save("price_real_convergence_beka.png", c1_real)
+CairoMakie.save("./static/images/price_real_convergence_beka.png", c1_real)
 
 Q_int = get_control_int(qs3)
 T_int = get_temperature_int(Ts3)
 c2_real = result_plot2(;T_int, Q_int, t0, tF, hour_lst, price_NOK, T_out)
-CairoMakie.save("price_real_result_beka.png", c2_real)
+CairoMakie.save("./static/images/price_real_result_beka.png", c2_real)
 
 #### Calculate final metrics
 # Initialize global variable

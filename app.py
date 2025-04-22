@@ -206,8 +206,10 @@ def run_simulation():
         "status":            "success",
         "output":            output_path,
         "plot":              "price_real_result_beka.png",
-        "convergence_plot":  "price_real_convergence_beka.png",
+        "plot":             "/static/images/price_real_result_beka.png",
+        "convergence_plot": "/static/images/price_real_convergence_beka.png",
         "visualizer_url":    "http://localhost:8080/index.html"
+
     })
 
 
