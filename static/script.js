@@ -102,11 +102,23 @@ function runSimulation() {
             // ⬇️  show the PNG the backend just saved
             const plotSection = document.getElementById("plot-section");
             const plotImg     = document.getElementById("result-plot");
+            const convImg = document.getElementById("convergence-plot");
+            const visSection = document.getElementById("visualizer-section");
+            const visFrame   = document.getElementById("paraview-viewer");
+
+            visFrame.src     = data.visualizer_url + "?t=" + Date.now();
+            visSection.style.display = "block";
+
 
             // Cache‑buster querystring so the browser doesn’t keep an old image
             plotImg.src = data.plot + "?t=" + Date.now();
+            convImg.src = data.convergence_plot + "?t=" + Date.now();
 
             plotSection.style.display = "block";
+
+
+
+
 
             document.getElementById("simulation-status").textContent =
                 "Simulation complete. Result file: " + data.output;

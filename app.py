@@ -7,6 +7,8 @@ from datetime import datetime
 import subprocess
 import os
 import json
+import socket
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -151,35 +153,62 @@ def download_msh():
 
     return send_file(msh_file_path, as_attachment=True)
 
-@ app.route('/run-simulation', methods=['POST'])
+@app.route('/run-simulation', methods=['POST'])
 def run_simulation():
-    import json                                   # already imported earlier
-    # 1️⃣  Persist Boundary.json  (unchanged)
+    # 1) Persist Boundary.json
     boundary_data = request.json.get('boundary')
     if boundary_data is None:
         return jsonify({"error": "Boundary data missing"}), 400
     with open("Boundary.json", "w") as f:
         json.dump(boundary_data, f, indent=2)
 
-    # 2️⃣  Persist WeatherandEnergy.json  (NEW)
+    # 2) Persist WeatherandEnergy.json (if any)
     weather_energy = request.json.get('weatherEnergy')
-    if weather_energy is not None:                # only write if supplied
+    if weather_energy is not None:
         with open("WeatherandEnergy.json", "w") as f:
             json.dump(weather_energy, f, indent=2)
 
-    # 3️⃣  Launch Julia (unchanged)
+    # 3) Launch Julia synchronously
     try:
-        subprocess.run(["julia", "main3beka.jl"],
-                        check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["julia", "main3beka.jl"],
+            check=True, capture_output=True, text=True
+        )
     except subprocess.CalledProcessError as e:
         return jsonify({"error": e.stderr}), 500
 
+    # 4) Verify results.pvd exists
     output_path = "results.pvd"
     if not os.path.exists(output_path):
         return jsonify({"error": "results.pvd not found after simulation"}), 500
 
-    return jsonify({"status": "success", "output": output_path})
+    # 5) Start the ParaView visualizer
+    pv_proc = subprocess.Popen(
+        ["pvpython", "--venv", ".pvenv", "./pvd-visualizer.py"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
 
+    # 6) Poll localhost:8080 until it’s up (timeout ~15 s)
+    for _ in range(30):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            if sock.connect_ex(("localhost", 8080)) == 0:
+                break
+        time.sleep(0.5)
+    else:
+        # if we never broke out of the loop
+        return jsonify({
+            "status": "error",
+            "error": "Visualizer server failed to start on port 8080"
+        }), 500
+
+    # 7) All set—return plots + visualizer URL
+    return jsonify({
+        "status":            "success",
+        "output":            output_path,
+        "plot":              "price_real_result_beka.png",
+        "convergence_plot":  "price_real_convergence_beka.png",
+        "visualizer_url":    "http://localhost:8080/index.html"
+    })
 
 
 

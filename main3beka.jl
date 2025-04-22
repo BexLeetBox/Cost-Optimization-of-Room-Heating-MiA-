@@ -174,6 +174,39 @@ price = get_price_function(price_NOK, tF, 1)
     q_pos=q_pos
 )
 
+
+
+ # # Opprett en mappe for midlertidige filer hvis den ikke eksisterer
+ if !isdir("tmp")
+     mkdir("tmp")
+ end
+
+"""
+ #Initialtilstanden og resten av tidsløsningene
+ uh0 = solution[1][2]  # Første element er (t0, T0), vi henter T0
+ uh  = solution[2:end]  # De resterende løsningene
+"""
+
+uh0 = Ts3[1][2]
+uh  = Ts3[2:end]
+
+
+ uh = Ts3
+ # Lagre resultater i Paraview-format (VTK)
+ createpvd("results") do pvd
+     # Første løsning (t=0)
+     # pvd[0] = createvtk(Ω, "tmp/results_0.vtu", cellfields=["u" => uh0])
+
+     # Lagrer løsninger for hver tidssteg
+     count = 0
+     for (tn, uhn) in uh
+         if count%5 == 0
+             pvd[tn] = createvtk(Ω, "tmp/results_$tn.vtu", cellfields=["u" => uhn])
+         end
+         count+=1
+     end
+ end
+
 #### Generate and save plots
 c1_real = plot_costs2(costs3)
 CairoMakie.save("price_real_convergence_beka.png", c1_real)
