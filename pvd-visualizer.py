@@ -46,6 +46,14 @@ state.dirty("time")
 # Show the scalar bar for 'u'
 display.SetScalarBarVisibility(render_view, True)
 
+
+data_range = pvd_reader.PointData["u"].GetRange()
+center = sum(data_range) / 2
+margin = 0.001
+color_map = GetColorTransferFunction("u")
+color_map.RescaleTransferFunction(center - margin, center + margin)
+
+
 # Helper to mark the time state as dirty, so the UI can pick up changes
 def update_view():
     state.dirty("time")
@@ -62,6 +70,7 @@ display.RescaleTransferFunctionToDataRange(False, True)
 
 animation_scene.PlayMode = "Snap To TimeSteps"  # discrete steps
 
+
 async def animation_loop():
     if not pvd_reader.TimestepValues:
         return
@@ -73,9 +82,9 @@ async def animation_loop():
         print(f"Time {t:.2f} -> updating view")
         UpdatePipeline(time=t, proxy=pvd_reader)
         render_view.ViewTime = t
-        display.RescaleTransferFunctionToDataRange(True, True)
         render_view.StillRender()
         ctrl.view_update()
+        display.RescaleTransferFunctionToDataRange(True, True)
         await asyncio.sleep(0.1)
 
 
