@@ -70,8 +70,6 @@ function GradientDescent(;solveSE, solveAE, spaces, dΩ, dΓ=nothing, Q, J, ∇f
 			while α > α_min
 				q_new = [(t,interpolate_everywhere((qfun(t) - α*grad)*q_pos, Qspace(t))) for (t,grad) in fgrad] |> P    # Compute tentative new control function defined by current line search parameter
 				
-				# q_new = [(q[kk][1],interpolate_everywhere((q[kk][2] - α*(price(q[kk][1])-W[kk][2]))*q_pos, Qspace(q[kk][1]))) for kk=1:length(q)] |> P    # Compute tentative new control function defined by current line search parameter
-				
 				qfunnew=t->find(q_new,t)
 				T_new, cacheSE = solveSE(solver, qfunnew, Trialspace, Testspace; dΩ, dΓ, Tout, constants)
 				interm = σ*α*L2fgrad^2
