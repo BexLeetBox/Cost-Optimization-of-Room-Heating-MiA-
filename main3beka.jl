@@ -39,7 +39,7 @@ f_Γ_wall(x) = !(f_Γ_w(x) || f_Γ_d(x))
 
 #### Domain & Discretization
 domain = (0, width, 0, height)
-partition = (25,25)
+partition = (40,40)
 model = CartesianDiscreteModel(domain,partition)
 update_labels!(1, model, f_Γ_w, "window")
 update_labels!(2, model, f_Γ_d, "door")
@@ -68,12 +68,13 @@ Uspace = FESpace(model, reffe, conformity=:H1)
 #### Time parameters
 t0 = 0.0    # Start time
 tF = 28800   # End time
-Δt = 50
+Δt = 60
 
 #### Room parameters
-h_wall(x) = 0.22*0.02           # [W/m^2K]
-h_window(x) = 1.2*0.02
-h_door(x) = 1.0*0.02
+h_wall(x) = 0.22*0.01           # [W/m^2K]
+h_window(x) =5.0 * 0.01   # previously 1.2 * 0.01
+h_door(x) = 2.5 * 0.01     # previously 1.0 * 0.01
+
 
 ρ(x)=1.225
 c(x)=1020.0
@@ -101,7 +102,7 @@ L2skp(u)=Δt*((∑(∫(u[1][2]⋅u[1][2])*dΩ)+∑(∫(u[end][2]⋅u[end][2])*d�
 
 Proj(a,b,z) = min(max(a,z),b)
 a=0.0
-b=400*(∑(∫(q_pos)*dΩ))
+b=500 #*(∑(∫(q_pos)*dΩ))
 Proj(z) = [(t,FEFunction(Uspace,map(x->Proj(a,b,x), get_free_dof_values(zz)))) for (t,zz) in z]
 
 #### Plotting functions
@@ -147,7 +148,7 @@ end
 
 #### Run Gradient Descent
 price = get_price_function(price_NOK, tF, 1)
-γ = 1.225*1020*3
+γ = 1.225*1020*3/4
 
 (Ts3, qs3, Ws3, costs3) = GradientDescent(
     solveSE=SEsolver,
@@ -163,8 +164,8 @@ price = get_price_function(price_NOK, tF, 1)
     sminargs=nothing,
     saveall=false,
     tol=1e-5,
-    iter_max=5,
-    armijoparas=(ρ=0.5, α_0=10, α_min=1e-4, σ=0.0),
+    iter_max=2,
+    armijoparas=(ρ=0.5, α_0=30, α_min=1e-4, σ=0.0),
     Δt=Δt,
     t0=t0,
     tF=tF,
